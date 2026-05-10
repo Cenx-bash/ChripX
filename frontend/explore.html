@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Explore — ChirpX</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body>
+    <div id="app" class="app-layout"></div>
+    <div id="toast-container"></div>
+    <script src="Js/app.js"></script>
+    <script src="Js/simulator.js"></script>
+    <script>
+      "use strict";
+      document.addEventListener("DOMContentLoaded", () => {
+        App.init();
+
+        const q = new URLSearchParams(window.location.search).get("q") || "";
+        const trends = Simulator.getTrendingHashtags();
+        const recs = Simulator.getRecommendedUsers();
+
+        document.getElementById("app").innerHTML = `
+    ${renderSidebar("explore")}
+    <main class="main-content">
+      <div class="explore-header">
+        <div class="explore-search">
+          <span class="explore-search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Search ChirpX..." value="${Utils.sanitize(q)}"
+            oninput="handleSearch(this.value)">
+        </div>
+        <div class="feed-tabs">
+          <div class="feed-tab active" onclick="switchExploreTab('trending',this)">Trending</div>
+          <div class="feed-tab" onclick="switchExploreTab('people',this)">People</div>
+          <div class="feed-tab" onclick="switchExploreTab('posts',this)">Posts</div>
+          <div class="feed-tab" onclick="switchExploreTab('hashtags',this)">Hashtags</div>
+        </div>
+      </div>
+
+      <div id="explore-content">
+        <!-- Trending grid -->
+        <div id="tab-trending">
+          <div style="padding:20px 20px 0;font-family:var(--font-display);font-size:1.1rem;font-weight:800">🔥 Trending Now</div>
+          <div class="trending-grid">
+            ${trends
+              .map(
+                (t, i) => `
+              <div class="trending-card" onclick="searchTag('${t.tag}')">
+                <div class="trending-card-num">#${i + 1} ${t.category}</div>
+                <div class="trending-card-tag">${t.tag}</div>
+                <div class="trending-card-posts">${t.posts} posts</div>
+                <div class="trending-card-heat">${t.heat}</div>
+              </div>`,
+              )
+              .join("")}
+          </div>
+
+          <div style="padding:0 20px 20px">
+            <div style="font-family:var(--font-display);font-size:1.1rem;font-weight:800;margin-bottom:16px">👥 People to Follow</div>
+            ${recs
+              .map(
+                (u) => `
+              <div class="follow-item" style="border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:10px;padding:14px 18px">
+                <img class="follow-avatar" src="${Utils.avatarPlaceholder(u.display_name)}" alt="${u.display_name}">
+                <div class="follow-info">
+                  <div class="follow-name">${Utils.sanitize(u.display_name)} ${u.is_verified ? '<span class="verified">✓</span>' : ""}</div>
+                  <div class="follow-handle">@${u.username} · ${u.followers} followers</div>
+                  <div style="font-size:0.82rem;color:var(--text-muted);margin-top:3px">${u.bio}</div>
+                </div>
+                <button class="follow-btn" onclick="toggleFollow('${u.username}',this)">Follow</button>
+              </div>`,
+              )
+              .join("")}
+          </div>
+        </div>
+
+        <div id="tab-people"   style="display:none;padding:20px">${renderPeopleTab(recs)}</div>
+        <div id="tab-posts"    style="display:none" id="posts-tab-content"></div>
+        <div id="tab-hashtags" style="display:none;padding:20px">${renderHashtagsTab(trends)}</div>
+      </div>
+    </main>
+
+    <aside class="right-aside">
+      <div class="aside-card">
+        <div class="aside-card-title">🏷 Top Hashtags</div>
+        ${trends
+          .slice(0, 8)
+          .map(
+            (t) => `
+          <div class="trend-item" onclick="searchTag('${t.tag}')">
+            <div class="trend-tag">${t.tag}</div>
+            <div class="trend-posts">${t.posts} posts · ${t.heat}</div>
+          </div>`,
+          )
+          .join("")}
+      </div>
+      <div style="padding:8px;font-size:0.74rem;color:var(--text-muted)">
+        <span class="sim-badge">⚡ DEMO DATA</span><br><br>
+        All trending data is simulated.
+      </div>
+    </aside>`;
+
+        // Auto-search if query param
+        if (q) setTimeout(() => handleSearch(q), 100);
+      });
+
+      function renderPeopleTab(users) {
+        return users
+          .map(
+            (u) => `
+    <div style="display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--border);border-radius:var(--radius-md);margin-bottom:12px;cursor:pointer" onclick="window.location.href='profile.html?u=${u.username}'">
+      <img class="follow-avatar" style="width:52px;height:52px" src="${Utils.avatarPlaceholder(u.display_name)}" alt="${u.display_name}">
+      <div style="flex:1">
+        <div style="font-weight:700;display:flex;align-items:center;gap:4px">${Utils.sanitize(u.display_name)} ${u.is_verified ? '<span class="verified">✓</span>' : ""}</div>
+        <div style="font-size:0.82rem;color:var(--text-muted)">@${u.username}</div>
+        <div style="font-size:0.85rem;color:var(--text-secondary);margin-top:4px">${u.bio}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px">${u.followers} followers <span class="sim-badge" style="font-size:0.65rem">SIM</span></div>
+      </div>
+      <button class="follow-btn" onclick="toggleFollow('${u.username}',this);event.stopPropagation()">Follow</button>
+    </div>`,
+          )
+          .join("");
+      }
+
+      function renderHashtagsTab(trends) {
+        return trends
+          .map(
+            (t, i) => `
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="searchTag('${t.tag}')">
+      <div style="width:32px;height:32px;background:var(--accent-soft);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accent);font-size:0.9rem;flex-shrink:0">#</div>
+      <div style="flex:1">
+        <div style="font-weight:700">${t.tag}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted)">${t.posts} posts · ${t.heat}</div>
+      </div>
+      <span class="badge badge-blue">${t.category}</span>
+    </div>`,
+          )
+          .join("");
+      }
+
+      let searchTimeout;
+      function handleSearch(val) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          if (!val.trim()) return;
+          if (val.startsWith("#")) {
+            searchTag(val);
+            return;
+          }
+          showSearchResults(val);
+        }, 350);
+      }
+
+      function showSearchResults(query) {
+        const recs = Simulator.getRecommendedUsers();
+        const posts = Array.from({ length: 6 }, () =>
+          Simulator.generateFakePost(),
+        );
+        const filtered = recs.filter(
+          (u) =>
+            u.display_name.toLowerCase().includes(query.toLowerCase()) ||
+            u.username.toLowerCase().includes(query.toLowerCase()),
+        );
+
+        document
+          .querySelectorAll('[id^="tab-"]')
+          .forEach((t) => (t.style.display = "none"));
+
+        let html = `<div style="padding:16px 20px;border-bottom:1px solid var(--border);font-size:0.88rem;color:var(--text-muted)">
+    Results for "<strong style="color:var(--text-primary)">${Utils.sanitize(query)}</strong>" · <span class="sim-badge">DEMO RESULTS</span></div>`;
+
+        if (filtered.length) {
+          html += `<div style="padding:16px 20px 0;font-weight:700">People</div>`;
+          html += filtered
+            .map(
+              (u) => `
+      <div class="follow-item" onclick="window.location.href='profile.html?u=${u.username}'">
+        <img class="follow-avatar" src="${Utils.avatarPlaceholder(u.display_name)}" alt="">
+        <div class="follow-info">
+          <div class="follow-name">${Utils.sanitize(u.display_name)} ${u.is_verified ? '<span class="verified">✓</span>' : ""}</div>
+          <div class="follow-handle">@${u.username}</div>
+        </div>
+        <button class="follow-btn" onclick="toggleFollow('${u.username}',this);event.stopPropagation()">Follow</button>
+      </div>`,
+            )
+            .join("");
+        }
+
+        html += `<div style="padding:16px 20px 0;font-weight:700">Posts</div>`;
+        html += posts.map((p) => renderPostCard(p)).join("");
+
+        document.getElementById("tab-trending").style.display = "block";
+        document.getElementById("tab-trending").innerHTML = html;
+      }
+
+      function searchTag(tag) {
+        document.getElementById("search-input").value = tag;
+        const posts = Array.from({ length: 8 }, () => {
+          const p = Simulator.generateFakePost();
+          p.content = `${p.content} ${tag}`;
+          return p;
+        });
+        document
+          .querySelectorAll('[id^="tab-"]')
+          .forEach((t) => (t.style.display = "none"));
+        document.getElementById("tab-trending").style.display = "block";
+        document.getElementById("tab-trending").innerHTML = `
+    <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+      <div style="font-size:1.2rem;font-weight:800;font-family:var(--font-display)">${tag}</div>
+      <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px">Trending · <span class="sim-badge">DEMO DATA</span></div>
+    </div>
+    ${posts.map((p) => renderPostCard(p)).join("")}`;
+      }
+
+      function switchExploreTab(tab, el) {
+        document
+          .querySelectorAll(".feed-tab")
+          .forEach((t) => t.classList.remove("active"));
+        el.classList.add("active");
+        document
+          .querySelectorAll('[id^="tab-"]')
+          .forEach((t) => (t.style.display = "none"));
+        const target = document.getElementById(`tab-${tab}`);
+        if (target) target.style.display = "block";
+        if (tab === "posts") {
+          const posts = Array.from({ length: 10 }, () =>
+            Simulator.generateFakePost(),
+          );
+          target.innerHTML = posts.map((p) => renderPostCard(p)).join("");
+        }
+      }
+
+      function toggleFollow(username, btn) {
+        if (!App.requireAuth()) return;
+        const is = btn.classList.contains("following");
+        btn.classList.toggle("following", !is);
+        btn.textContent = is ? "Follow" : "Following";
+        App.toast(
+          is ? `Unfollowed @${username}` : `Now following @${username} (demo)`,
+          "success",
+          2000,
+        );
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ChirpX</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <style>
+      .landing {
+        min-height: 100vh;
+        background: var(--bg-base);
+        overflow-x: hidden;
+      }
+
+      /* Nav */
+      .landing-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 60px;
+        background: rgba(10, 10, 15, 0.82);
+        backdrop-filter: blur(18px);
+        border-bottom: 1px solid var(--border);
+      }
+      .landing-logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: var(--font-display);
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: var(--accent);
+      }
+      .landing-logo-icon {
+        width: 36px;
+        height: 36px;
+        background: var(--accent);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+      }
+      .landing-nav-links {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .nav-link {
+        padding: 9px 20px;
+        border-radius: var(--radius-pill);
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        transition: all var(--t-fast);
+      }
+      .nav-link:hover {
+        color: var(--text-primary);
+      }
+      .nav-link.primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .nav-link.primary:hover {
+        background: var(--accent-hover);
+        box-shadow: var(--shadow-glow);
+      }
+      .nav-link.outline {
+        border: 1.5px solid var(--border-mid);
+        color: var(--text-primary);
+      }
+      .nav-link.outline:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      /* Hero */
+      .hero {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        padding: 120px 60px 80px;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-bg {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          radial-gradient(
+            ellipse 60% 50% at 70% 50%,
+            rgba(29, 168, 242, 0.08) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            ellipse 40% 40% at 20% 80%,
+            rgba(168, 85, 247, 0.06) 0%,
+            transparent 60%
+          );
+      }
+      .hero-grid {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          linear-gradient(var(--border) 1px, transparent 1px),
+          linear-gradient(90deg, var(--border) 1px, transparent 1px);
+        background-size: 60px 60px;
+        opacity: 0.4;
+        mask-image: radial-gradient(
+          ellipse at center,
+          black 30%,
+          transparent 80%
+        );
+      }
+      .hero-content {
+        max-width: 640px;
+        position: relative;
+        z-index: 1;
+      }
+      .hero-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-pill);
+        padding: 6px 16px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 28px;
+      }
+      .hero-tag-dot {
+        width: 7px;
+        height: 7px;
+        background: var(--green);
+        border-radius: 50%;
+        animation: pulse 2s infinite;
+      }
+      .hero-title {
+        font-family: var(--font-display);
+        font-size: 4rem;
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 22px;
+        letter-spacing: -0.02em;
+      }
+      .hero-title .accent {
+        color: var(--accent);
+      }
+      .hero-title .gradient {
+        background: linear-gradient(135deg, var(--accent), #a855f7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .hero-sub {
+        font-size: 1.15rem;
+        color: var(--text-secondary);
+        line-height: 1.65;
+        margin-bottom: 36px;
+        max-width: 500px;
+      }
+      .hero-ctas {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 48px;
+      }
+      .hero-cta-primary {
+        padding: 15px 34px;
+        background: var(--accent);
+        color: #fff;
+        border-radius: var(--radius-pill);
+        font-family: var(--font-display);
+        font-size: 1rem;
+        font-weight: 700;
+        transition: all var(--t-fast);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .hero-cta-primary:hover {
+        background: var(--accent-hover);
+        box-shadow: 0 6px 30px rgba(29, 168, 242, 0.45);
+        transform: translateY(-2px);
+      }
+      .hero-cta-secondary {
+        padding: 15px 34px;
+        border: 1.5px solid var(--border-mid);
+        color: var(--text-primary);
+        border-radius: var(--radius-pill);
+        font-family: var(--font-display);
+        font-size: 1rem;
+        font-weight: 700;
+        transition: all var(--t-fast);
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .hero-cta-secondary:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .hero-stats {
+        display: flex;
+        gap: 32px;
+      }
+      .hero-stat-num {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        font-weight: 800;
+      }
+      .hero-stat-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+      }
+      .hero-demo-label {
+        font-size: 0.7rem;
+        color: var(--yellow);
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 4px;
+        padding: 2px 6px;
+        display: inline-block;
+        margin-top: 4px;
+      }
+
+      /* Mock phone */
+      .hero-visual {
+        position: absolute;
+        right: 80px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 320px;
+      }
+      .mock-phone {
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 28px;
+        overflow: hidden;
+        box-shadow:
+          0 20px 80px rgba(0, 0, 0, 0.6),
+          0 0 0 1px var(--border);
+        animation: float 4s ease-in-out infinite;
+      }
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-14px);
+        }
+      }
+      .mock-phone-bar {
+        background: var(--bg-card);
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.85rem;
+        font-weight: 700;
+      }
+      .mock-post {
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        gap: 10px;
+      }
+      .mock-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        flex-shrink: 0;
+      }
+      .mock-body {
+        flex: 1;
+      }
+      .mock-name {
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .mock-text {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+        margin-bottom: 8px;
+      }
+      .mock-actions {
+        display: flex;
+        gap: 14px;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+      }
+      .mock-action-live {
+        color: var(--red);
+        font-weight: 700;
+        animation: pulse 1.5s ease infinite;
+      }
+
+      /* Features */
+      .features {
+        padding: 100px 60px;
+      }
+      .section-title {
+        font-family: var(--font-display);
+        font-size: 2.4rem;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 12px;
+      }
+      .section-sub {
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 1rem;
+        margin-bottom: 60px;
+      }
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .feature-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 28px;
+        transition: all var(--t-mid);
+        position: relative;
+        overflow: hidden;
+      }
+      .feature-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--accent);
+        opacity: 0;
+        transition: opacity var(--t-fast);
+      }
+      .feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--border-mid);
+      }
+      .feature-card:hover::before {
+        opacity: 1;
+      }
+      .feature-icon {
+        font-size: 2rem;
+        margin-bottom: 16px;
+        display: block;
+      }
+      .feature-title {
+        font-family: var(--font-display);
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+      .feature-desc {
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        line-height: 1.65;
+      }
+
+      /* Demo banner */
+      .demo-banner {
+        margin: 0 60px 80px;
+        padding: 28px 36px;
+        background: linear-gradient(
+          135deg,
+          rgba(245, 158, 11, 0.08),
+          rgba(245, 158, 11, 0.03)
+        );
+        border: 1px solid rgba(245, 158, 11, 0.25);
+        border-radius: var(--radius-xl);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+      .demo-banner-icon {
+        font-size: 2.5rem;
+        flex-shrink: 0;
+      }
+      .demo-banner-title {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--yellow);
+        margin-bottom: 6px;
+      }
+      .demo-banner-text {
+        font-size: 0.88rem;
+        color: var(--text-muted);
+        line-height: 1.6;
+      }
+
+      /* CTA section */
+      .cta-section {
+        padding: 80px 60px;
+        text-align: center;
+        background: linear-gradient(
+          135deg,
+          rgba(29, 168, 242, 0.05),
+          transparent
+        );
+      }
+      .cta-title {
+        font-family: var(--font-display);
+        font-size: 2.8rem;
+        font-weight: 800;
+        margin-bottom: 16px;
+      }
+      .cta-sub {
+        color: var(--text-muted);
+        font-size: 1rem;
+        margin-bottom: 32px;
+      }
+      .cta-btns {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      /* Footer */
+      .footer {
+        padding: 40px 60px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .footer-logo {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: var(--accent);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .footer-links {
+        display: flex;
+        gap: 20px;
+      }
+      .footer-link {
+        font-size: 0.84rem;
+        color: var(--text-muted);
+        transition: color var(--t-fast);
+      }
+      .footer-link:hover {
+        color: var(--text-primary);
+      }
+      .footer-copy {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+      }
+
+      @media (max-width: 1100px) {
+        .hero-visual {
+          display: none;
+        }
+        .features-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 780px) {
+        .hero {
+          padding: 100px 24px 60px;
+        }
+        .hero-title {
+          font-size: 2.6rem;
+        }
+        .features {
+          padding: 60px 24px;
+        }
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+        .landing-nav {
+          padding: 16px 24px;
+        }
+        .demo-banner {
+          margin: 0 24px 60px;
+        }
+        .cta-section {
+          padding: 60px 24px;
+        }
+        .footer {
+          padding: 30px 24px;
+        }
+      }
+    </style>
+  </head>
+  <body class="landing">
+    <!-- Nav -->
+    <nav class="landing-nav">
+      <div class="landing-logo">
+        <div class="landing-logo-icon">🐦</div>
+        ChirpX
+      </div>
+      <div class="landing-nav-links">
+        <a href="login.html" class="nav-link outline">Sign In</a>
+        <a href="register.html" class="nav-link primary">Join Free</a>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-grid"></div>
+      <div class="hero-content">
+        <!---<div class="hero-tag">
+          <span class="hero-tag-dot"></span>
+          Demo Platform · All data simulated
+        </div> --->
+        <h1 class="hero-title">
+          The place where<br />
+          ideas <span class="gradient">take flight</span>
+        </h1>
+        <p class="hero-sub">
+          ChirpX is a full-featured social media demo platform. Post, connect,
+          engage — with all metrics simulated for educational purposes.
+        </p>
+        <div class="hero-ctas">
+          <a href="register.html" class="hero-cta-primary"
+            >Get Started Free →</a
+          >
+          <a href="dashboard.html" class="hero-cta-secondary">👀 Explore</a>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-num">2.4M+</div>
+            <div class="hero-stat-label">Simulated Users</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">18M+</div>
+            <div class="hero-stat-label">Posts</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">99.9%</div>
+            <div class="hero-stat-label">Uptime</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mock phone -->
+      <div class="hero-visual">
+        <div class="mock-phone">
+          <div class="mock-phone-bar">
+            <span style="font-size: 1rem">🐦</span> ChirpX
+            <span
+              style="
+                margin-left: auto;
+                color: var(--accent);
+                font-size: 0.75rem;
+              "
+              >● Live Demo</span
+            >
+          </div>
+          <div class="mock-post">
+            <div
+              class="mock-avatar"
+              style="background: linear-gradient(135deg, #1da8f2, #a855f7)"
+            ></div>
+            <div class="mock-body">
+              <div class="mock-name">
+                Sarah Mitchell <span style="color: var(--accent)">✓</span>
+              </div>
+              <div class="mock-text">
+                Just shipped the feature I've been building for 3 weeks. The
+                feeling is unmatched 🚀 #buildinpublic
+              </div>
+              <div class="mock-actions">
+                <span>💬 342</span>
+                <span>🔁 1.2K</span>
+                <span class="mock-action-live">❤ 8.4K</span>
+                <span>👁 94.8K</span>
+              </div>
+            </div>
+          </div>
+          <div class="mock-post">
+            <div
+              class="mock-avatar"
+              style="background: linear-gradient(135deg, #f4436c, #f59e0b)"
+            ></div>
+            <div class="mock-body">
+              <div class="mock-name">
+                Zara Okonkwo <span style="color: var(--accent)">✓</span>
+              </div>
+              <div class="mock-text">
+                New digital art piece — 72 hours, 340 layers, zero regrets ✨
+                #digitalart
+              </div>
+              <div class="mock-actions">
+                <span>💬 892</span>
+                <span>🔁 4.5K</span>
+                <span class="mock-action-live">❤ 28.9K</span>
+                <span>👁 312K</span>
+              </div>
+            </div>
+          </div>
+          <div class="mock-post" style="border-bottom: none">
+            <div
+              class="mock-avatar"
+              style="background: linear-gradient(135deg, #22c55e, #1da8f2)"
+            ></div>
+            <div class="mock-body">
+              <div class="mock-name">
+                Alex Rivers <span style="color: var(--accent)">✓</span>
+              </div>
+              <div class="mock-text">
+                Hot take: most design systems are just CSS variables and courage
+                😂 #design #ux
+              </div>
+              <div class="mock-actions">
+                <span>💬 891</span>
+                <span>🔁 2.9K</span>
+                <span class="mock-action-live">❤ 12K</span>
+                <span>👁 183K</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+      <h2 class="section-title">Everything you need</h2>
+      <p class="section-sub">
+        A complete social media platform built for demo and educational purposes
+      </p>
+      <div class="features-grid">
+        <div class="feature-card">
+          <span class="feature-icon">📝</span>
+          <div class="feature-title">Rich Post Composer</div>
+          <div class="feature-desc">
+            Text, images, videos, GIFs, emoji picker, hashtags, mentions,
+            threads, drafts & scheduling.
+          </div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">⚡</span>
+          <div class="feature-title">Simulated Engagement</div>
+          <div class="feature-desc">
+            Real-time simulated likes, reposts, views and comments — all
+            fictional demo data for testing.
+          </div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🔍</span>
+          <div class="feature-title">Explore & Trending</div>
+          <div class="feature-desc">
+            Discover trending hashtags, search users and posts, explore
+            recommended content.
+          </div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">✉️</span>
+          <div class="feature-title">Direct Messages</div>
+          <div class="feature-desc">
+            DMs, group chats, typing indicators, online status, reactions and
+            file sharing.
+          </div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🔔</span>
+          <div class="feature-title">Smart Notifications</div>
+          <div class="feature-desc">
+            Real-time push-style notifications for likes, follows, mentions and
+            comments.
+          </div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🛡</span>
+          <div class="feature-title">Admin Dashboard</div>
+          <div class="feature-desc">
+            Full analytics, user management, content moderation, engagement
+            simulator controls.
+          </div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">👤</span>
+          <div class="feature-title">Rich Profiles</div>
+          <div class="feature-desc">
+            Avatar & banner upload, bios, verification badges, stats, media
+            tabs, pinned posts.
+          </div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">📊</span>
+          <div class="feature-title">Analytics & Insights</div>
+          <div class="feature-desc">
+            Post insights, engagement charts, user growth graphs and trending
+            analytics.
+          </div>
+        </div>
+        <div class="feature-card">
+          <span class="feature-icon">🌙</span>
+          <div class="feature-title">Dark Mode + Responsive</div>
+          <div class="feature-desc">
+            Full dark/light mode, mobile responsive design, keyboard shortcuts
+            and accessibility.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Demo warning banner -->
+    <div class="demo-banner">
+      <div class="demo-banner-icon">⚠️</div>
+      <div>
+        <div class="demo-banner-title">Educational & Demo Platform Only</div>
+        <div class="demo-banner-text">
+          All user data, engagement metrics (likes, followers, reposts, views,
+          comments, trending data) on ChirpX are
+          <strong>100% simulated and fictional</strong>. This platform is not
+          connected to Twitter/X or any real social media service. Built for
+          educational, portfolio, and demo purposes only. No real user data is
+          collected or stored in production.
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <section class="cta-section">
+      <h2 class="cta-title">Ready to explore?</h2>
+      <p class="cta-sub">
+        Create your demo account and see the full platform in action
+      </p>
+      <div class="cta-btns">
+        <a href="register.html" class="hero-cta-primary"
+          >Create Free Account →</a
+        >
+        <a href="login.html" class="hero-cta-secondary">Sign In</a>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-logo">
+        <span style="font-size: 1.1rem">🐦</span> ChirpX
+      </div>
+      <div class="footer-links">
+        <a href="dashboard.html" class="footer-link">Dashboard</a>
+        <a href="explore.html" class="footer-link">Explore</a>
+        <a href="admin.html" class="footer-link">Admin</a>
+        <a href="register.html" class="footer-link">Register</a>
+      </div>
+      <div class="footer-copy">
+        © 2025 ChirpX · Demo/Educational Platform · All engagement data is
+        simulated
+      </div>
+    </footer>
+
+    <script src="Js/app.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        App.init();
+        // Animate hero stat numbers
+        document.querySelectorAll(".hero-stat-num").forEach((el) => {
+          el.style.animation = "fadeSlideIn 0.6s ease both";
+        });
+      });
+    </script>
+  </body>
+</html>

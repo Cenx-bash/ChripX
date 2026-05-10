@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Create Account — ChirpX</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/auth.css" />
+  </head>
+  <body class="auth-page" data-page="register">
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="auth-logo">
+          <div class="auth-logo-icon">🐦</div>
+          <div class="auth-logo-name">ChirpX</div>
+        </div>
+        <h1 class="auth-headline">
+          Join the<br />conversation<br /><span class="accent">today</span>
+        </h1>
+        <div class="auth-features">
+          <div class="auth-feature">
+            <div class="auth-feature-icon">🚀</div>
+            Create your profile in seconds
+          </div>
+          <div class="auth-feature">
+            <div class="auth-feature-icon">🔥</div>
+            Post text, images, videos & GIFs
+          </div>
+          <div class="auth-feature">
+            <div class="auth-feature-icon">📊</div>
+            Watch your engagement grow (demo)
+          </div>
+          <div class="auth-feature">
+            <div class="auth-feature-icon">🎨</div>
+            Customize your profile and theme
+          </div>
+        </div>
+        <div class="auth-demo-banner">
+          ⚠️ Demo platform — your account is real but all engagement is
+          simulated for educational purposes.
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-card">
+        <div style="text-align: center; margin-bottom: 24px">
+          <div style="font-size: 2rem; margin-bottom: 8px">🐦</div>
+          <div class="auth-card-title">Create your account</div>
+          <div class="auth-card-sub">Start chirping in under a minute</div>
+        </div>
+
+        <div
+          id="error-box"
+          class="auth-error"
+          style="display: none; margin-bottom: 14px"
+        >
+          <span>⚠</span> <span id="error-text"></span>
+        </div>
+
+        <form id="register-form" class="auth-form" novalidate>
+          <div class="input-group">
+            <label class="input-label" for="display_name">Display name</label>
+            <div class="input-wrapper">
+              <span class="input-icon">😊</span>
+              <input
+                type="text"
+                id="display_name"
+                class="input-field"
+                placeholder="Your Name"
+                required
+                maxlength="100"
+              />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="username">Username</label>
+            <div class="input-wrapper">
+              <span class="input-icon">@</span>
+              <input
+                type="text"
+                id="username"
+                class="input-field"
+                placeholder="yourhandle"
+                required
+                minlength="3"
+                maxlength="50"
+                pattern="[a-zA-Z0-9_]+"
+              />
+            </div>
+            <div
+              id="username-hint"
+              style="font-size: 0.78rem; color: var(--text-muted)"
+            ></div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="email">Email address</label>
+            <div class="input-wrapper">
+              <span class="input-icon">✉</span>
+              <input
+                type="email"
+                id="email"
+                class="input-field"
+                placeholder="you@example.com"
+                required
+                autocomplete="email"
+              />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="password">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input
+                type="password"
+                id="password"
+                class="input-field"
+                placeholder="Min. 8 characters"
+                required
+                minlength="8"
+                autocomplete="new-password"
+              />
+            </div>
+            <div class="password-strength">
+              <div class="strength-bars">
+                <div class="strength-bar"></div>
+                <div class="strength-bar"></div>
+                <div class="strength-bar"></div>
+                <div class="strength-bar"></div>
+              </div>
+              <div class="strength-label"></div>
+            </div>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              align-items: flex-start;
+              gap: 10px;
+              margin-top: 4px;
+            "
+          >
+            <input
+              type="checkbox"
+              id="terms"
+              style="
+                margin-top: 3px;
+                accent-color: var(--accent);
+                width: 16px;
+                height: 16px;
+                flex-shrink: 0;
+              "
+            />
+            <label
+              for="terms"
+              style="
+                font-size: 0.82rem;
+                color: var(--text-muted);
+                cursor: pointer;
+                line-height: 1.5;
+              "
+            >
+              I agree to the
+              <a href="#" style="color: var(--accent)">Terms of Service</a> and
+              understand this is a
+              <strong style="color: var(--yellow)">demo platform</strong> with
+              simulated data.
+            </label>
+          </div>
+
+          <button type="submit" class="auth-submit-btn" id="submit-btn">
+            Create Account 🐦
+          </button>
+        </form>
+
+        <div class="auth-switch">
+          Already have an account? <a href="login.html">Sign in</a>
+        </div>
+
+        <div style="text-align: center; margin-top: 16px">
+          <a
+            href="index.html"
+            style="font-size: 0.82rem; color: var(--text-muted)"
+            >← Back to home</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="Js/app.js"></script>
+    <script src="Js/auth.js"></script>
+  </body>
+</html>

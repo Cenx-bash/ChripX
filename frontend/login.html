@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In — ChirpX</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/auth.css" />
+  </head>
+  <body class="auth-page" data-page="login">
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="auth-logo">
+          <div class="auth-logo-icon">🐦</div>
+          <div class="auth-logo-name">ChirpX</div>
+        </div>
+        <h1 class="auth-headline">
+          Everything<br />happening<br /><span class="accent">right now</span>
+        </h1>
+        <div class="auth-features">
+          <div class="auth-feature">
+            <div class="auth-feature-icon">📝</div>
+            Share thoughts, media and threads
+          </div>
+          <div class="auth-feature">
+            <div class="auth-feature-icon">⚡</div>
+            Watch engagement grow in real-time (simulated)
+          </div>
+          <div class="auth-feature">
+            <div class="auth-feature-icon">🌍</div>
+            Explore trending topics and people
+          </div>
+          <div class="auth-feature">
+            <div class="auth-feature-icon">✉️</div>
+            Chat privately with DMs and groups
+          </div>
+        </div>
+        <div class="auth-demo-banner">
+          ⚠️ Demo platform — all engagement data is simulated. Not connected to
+          real social media APIs.
+        </div>
+      </div>
+    </div>
+
+    <div class="auth-right">
+      <div class="auth-card">
+        <div style="text-align: center; margin-bottom: 28px">
+          <div style="font-size: 2rem; margin-bottom: 8px">🐦</div>
+          <div class="auth-card-title">Welcome back</div>
+          <div class="auth-card-sub">Sign in to your ChirpX account</div>
+        </div>
+
+        <!-- Demo credentials -->
+        <div class="demo-creds">
+          <div class="demo-creds-title">⚡ Demo Credentials</div>
+          <table>
+            <tr>
+              <td>Admin</td>
+              <td>admin@chirpx.demo</td>
+              <td>
+                <span
+                  class="use-btn"
+                  data-email="admin@chirpx.demo"
+                  data-pass="Admin123!"
+                  style="
+                    cursor: pointer;
+                    color: var(--accent);
+                    font-size: 0.75rem;
+                    text-decoration: underline;
+                  "
+                  >Use</span
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>User</td>
+              <td>alex@chirpx.demo</td>
+              <td>
+                <span
+                  class="use-btn"
+                  data-email="alex@chirpx.demo"
+                  data-pass="Demo123!"
+                  style="
+                    cursor: pointer;
+                    color: var(--accent);
+                    font-size: 0.75rem;
+                    text-decoration: underline;
+                  "
+                  >Use</span
+                >
+              </td>
+            </tr>
+            <tr>
+              <td>User</td>
+              <td>maya@chirpx.demo</td>
+              <td>
+                <span
+                  class="use-btn"
+                  data-email="maya@chirpx.demo"
+                  data-pass="Demo123!"
+                  style="
+                    cursor: pointer;
+                    color: var(--accent);
+                    font-size: 0.75rem;
+                    text-decoration: underline;
+                  "
+                  >Use</span
+                >
+              </td>
+            </tr>
+          </table>
+          <div
+            style="
+              margin-top: 8px;
+              font-size: 0.72rem;
+              color: var(--text-muted);
+            "
+          >
+            All passwords: Demo123! / Admin123!
+          </div>
+        </div>
+
+        <div
+          id="error-box"
+          class="auth-error"
+          style="display: none; margin-bottom: 14px"
+        >
+          <span>⚠</span> <span id="error-text"></span>
+        </div>
+
+        <form id="login-form" class="auth-form" novalidate>
+          <div class="input-group">
+            <label class="input-label" for="email">Email address</label>
+            <div class="input-wrapper">
+              <span class="input-icon">✉</span>
+              <input
+                type="email"
+                id="email"
+                class="input-field"
+                placeholder="you@example.com"
+                required
+                autocomplete="email"
+              />
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="password">Password</label>
+            <div class="input-wrapper">
+              <span class="input-icon">🔒</span>
+              <input
+                type="password"
+                id="password"
+                class="input-field"
+                placeholder="Your password"
+                required
+                autocomplete="current-password"
+              />
+              <span class="input-eye" id="toggle-pass">👁</span>
+            </div>
+            <div class="auth-forgot" style="margin-top: 4px">
+              <a href="forgot-password.html">Forgot password?</a>
+            </div>
+          </div>
+
+          <button type="submit" class="auth-submit-btn" id="submit-btn">
+            Sign In
+          </button>
+        </form>
+
+        <div class="auth-switch">
+          Don't have an account? <a href="register.html">Sign up for free</a>
+        </div>
+
+        <div style="text-align: center; margin-top: 24px">
+          <a
+            href="index.html"
+            style="font-size: 0.82rem; color: var(--text-muted)"
+            >← Back to home</a
+          >
+        </div>
+      </div>
+    </div>
+
+    <div id="toast-container"></div>
+    <script src="Js/app.js"></script>
+    <script src="Js/auth.js"></script>
+  </body>
+</html>

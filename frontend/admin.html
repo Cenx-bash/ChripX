@@ -1,0 +1,982 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Dashboard — ChirpX</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  </head>
+  <body>
+    <div id="toast-container"></div>
+    <script src="Js/app.js"></script>
+    <script src="Js/simulator.js"></script>
+    <script>
+      "use strict";
+
+      const ADMIN_USERS = [
+        {
+          id: 1,
+          name: "ChirpX Admin",
+          handle: "admin",
+          email: "admin@chirpx.demo",
+          role: "admin",
+          status: "active",
+          posts: 287,
+          followers: "99.8K",
+          joined: "Jan 2020",
+          verified: true,
+        },
+        {
+          id: 2,
+          name: "Alex Rivers",
+          handle: "alex_rivers",
+          email: "alex@chirpx.demo",
+          role: "user",
+          status: "active",
+          posts: 1043,
+          followers: "48.3K",
+          joined: "Mar 2021",
+          verified: true,
+        },
+        {
+          id: 3,
+          name: "Maya Chen",
+          handle: "maya_chen",
+          email: "maya@chirpx.demo",
+          role: "user",
+          status: "active",
+          posts: 762,
+          followers: "31.8K",
+          joined: "Jun 2020",
+          verified: true,
+        },
+        {
+          id: 4,
+          name: "Marco Dev",
+          handle: "dev_marco",
+          email: "marco@chirpx.demo",
+          role: "user",
+          status: "active",
+          posts: 2103,
+          followers: "12.4K",
+          joined: "Aug 2022",
+          verified: false,
+        },
+        {
+          id: 5,
+          name: "Sarah Mitchell",
+          handle: "sarahcodes",
+          email: "sarah@chirpx.demo",
+          role: "mod",
+          status: "active",
+          posts: 4521,
+          followers: "89.2K",
+          joined: "Jan 2019",
+          verified: true,
+        },
+        {
+          id: 6,
+          name: "Jessica Wong",
+          handle: "travel_jess",
+          email: "jess@chirpx.demo",
+          role: "user",
+          status: "active",
+          posts: 8920,
+          followers: "234K",
+          joined: "May 2018",
+          verified: false,
+        },
+        {
+          id: 7,
+          name: "DeFi Dave",
+          handle: "crypto_king",
+          email: "dave@chirpx.demo",
+          role: "user",
+          status: "banned",
+          posts: 3421,
+          followers: "18.3K",
+          joined: "Apr 2022",
+          verified: false,
+        },
+        {
+          id: 8,
+          name: "Zara Okonkwo",
+          handle: "art_zara",
+          email: "zara@chirpx.demo",
+          role: "user",
+          status: "active",
+          posts: 2894,
+          followers: "156K",
+          joined: "Nov 2020",
+          verified: true,
+        },
+      ];
+
+      const REPORTS = [
+        {
+          id: 1,
+          reporter: "alex_rivers",
+          post: "Post #4421",
+          reason: "Spam",
+          status: "pending",
+          time: "2h ago",
+        },
+        {
+          id: 2,
+          reporter: "maya_chen",
+          post: "Post #8834",
+          reason: "Misinformation",
+          status: "reviewed",
+          time: "5h ago",
+        },
+        {
+          id: 3,
+          reporter: "sarahcodes",
+          post: "User @crypto_king",
+          reason: "Harassment",
+          status: "actioned",
+          time: "1d ago",
+        },
+        {
+          id: 4,
+          reporter: "travel_jess",
+          post: "Post #2210",
+          reason: "Spam",
+          status: "dismissed",
+          time: "2d ago",
+        },
+        {
+          id: 5,
+          reporter: "art_zara",
+          post: "Post #9912",
+          reason: "Inappropriate",
+          status: "pending",
+          time: "3d ago",
+        },
+      ];
+
+      document.addEventListener("DOMContentLoaded", () => {
+        App.init();
+        renderAdmin();
+      });
+
+      function renderAdmin() {
+        document.body.innerHTML = `
+    <div id="toast-container"></div>
+    <div class="admin-layout">
+      <!-- Admin sidebar -->
+      <nav class="admin-sidebar">
+        <div class="admin-logo">
+          <div class="admin-logo-icon">🛡</div>
+          <div>
+            <div class="admin-logo-text">ChirpX</div>
+            <div class="admin-logo-sub">ADMIN PANEL</div>
+          </div>
+        </div>
+
+        <div class="admin-nav-section">
+          <div class="admin-nav-section-label">Overview</div>
+          ${[
+            { id: "dashboard", icon: "📊", label: "Dashboard" },
+            { id: "analytics", icon: "📈", label: "Analytics" },
+          ]
+            .map(
+              (i, idx) => `
+            <div class="admin-nav-item ${idx === 0 ? "active" : ""}" onclick="showAdminPage('${i.id}',this)">
+              <span class="admin-nav-icon">${i.icon}</span>${i.label}
+            </div>`,
+            )
+            .join("")}
+        </div>
+
+        <div class="admin-nav-section">
+          <div class="admin-nav-section-label">Management</div>
+          ${[
+            { id: "users", icon: "👥", label: "Users" },
+            { id: "posts", icon: "📝", label: "Posts" },
+            { id: "reports", icon: "🚩", label: "Reports" },
+          ]
+            .map(
+              (i) => `
+            <div class="admin-nav-item" onclick="showAdminPage('${i.id}',this)">
+              <span class="admin-nav-icon">${i.icon}</span>${i.label}
+            </div>`,
+            )
+            .join("")}
+        </div>
+
+        <div class="admin-nav-section">
+          <div class="admin-nav-section-label">Simulator</div>
+          ${[
+            { id: "simulator", icon: "⚡", label: "Engagement Sim" },
+            { id: "bots", icon: "🤖", label: "Bot Manager" },
+          ]
+            .map(
+              (i) => `
+            <div class="admin-nav-item" onclick="showAdminPage('${i.id}',this)">
+              <span class="admin-nav-icon">${i.icon}</span>${i.label}
+            </div>`,
+            )
+            .join("")}
+        </div>
+
+        <div style="margin-top:auto;padding-top:16px;border-top:1px solid var(--border)">
+          <a href="dashboard.html" class="admin-nav-item">
+            <span class="admin-nav-icon">⌂</span>Back to App
+          </a>
+          <div class="admin-nav-item" onclick="App.logout()" style="color:var(--red)">
+            <span class="admin-nav-icon">🚪</span>Logout
+          </div>
+        </div>
+      </nav>
+
+      <!-- Admin main -->
+      <div class="admin-main" id="admin-main">
+        ${renderDashboardPage()}
+      </div>
+    </div>`;
+
+        // Init charts after DOM ready
+        setTimeout(initCharts, 100);
+      }
+
+      function renderDashboardPage() {
+        const stats = [
+          {
+            label: "Total Users",
+            val: "8",
+            trend: "+12% this week",
+            dir: "up",
+            color: "blue",
+            icon: "👥",
+          },
+          {
+            label: "Total Posts",
+            val: "21.5K",
+            trend: "+8.4% today",
+            dir: "up",
+            color: "green",
+            icon: "📝",
+          },
+          {
+            label: "Active Sessions",
+            val: "3",
+            trend: "Live now",
+            dir: "up",
+            color: "purple",
+            icon: "⚡",
+          },
+          {
+            label: "Reports Pending",
+            val: "2",
+            trend: "Needs review",
+            dir: "down",
+            color: "red",
+            icon: "🚩",
+          },
+        ];
+
+        return `
+    <div class="admin-page-title">📊 Dashboard</div>
+    <div class="admin-page-sub">Platform overview · <span class="sim-badge">ALL DATA SIMULATED FOR DEMO</span></div>
+
+    <div class="admin-stats-grid">
+      ${stats
+        .map(
+          (s) => `
+        <div class="admin-stat-card ${s.color}">
+          <div class="stat-card-icon">${s.icon}</div>
+          <div class="stat-card-value">${s.val}</div>
+          <div class="stat-card-label">${s.label}</div>
+          <div class="stat-card-trend ${s.dir}">
+            ${s.dir === "up" ? "↑" : "↓"} ${s.trend}
+          </div>
+        </div>`,
+        )
+        .join("")}
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-card-title">📈 User Growth (Simulated)</div>
+        <div class="chart-area"><canvas id="userGrowthChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">⚡ Engagement (Simulated)</div>
+        <div class="chart-area"><canvas id="engagementChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="admin-table-wrap">
+      <div class="admin-table-header">
+        <div class="admin-table-title">🕐 Recent Activity</div>
+        <span class="sim-badge">DEMO DATA</span>
+      </div>
+      <table class="admin-table">
+        <thead><tr>
+          <th>User</th><th>Action</th><th>Target</th><th>Time</th>
+        </tr></thead>
+        <tbody>
+          ${[
+            {
+              u: "Alex Rivers",
+              action: "Posted",
+              target: "New chirp about TypeScript",
+              time: "2m ago",
+            },
+            {
+              u: "Maya Chen",
+              action: "Liked",
+              target: "Post by Sarah Mitchell",
+              time: "5m ago",
+            },
+            {
+              u: "Zara Okonkwo",
+              action: "Followed",
+              target: "@sarahcodes",
+              time: "12m ago",
+            },
+            {
+              u: "Sarah Mitchell",
+              action: "Reposted",
+              target: "Post by @dev_marco",
+              time: "18m ago",
+            },
+            {
+              u: "Jessica Wong",
+              action: "Registered",
+              target: "New account",
+              time: "1h ago",
+            },
+          ]
+            .map(
+              (r) => `
+            <tr>
+              <td><div class="admin-user-cell">
+                <div class="admin-user-avatar" style="background:${avatarBg(r.u)};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.8rem">${r.u[0]}</div>
+                <span>${r.u}</span>
+              </div></td>
+              <td><span class="badge badge-blue">${r.action}</span></td>
+              <td style="color:var(--text-muted);font-size:0.84rem">${r.target}</td>
+              <td style="color:var(--text-muted);font-size:0.82rem">${r.time}</td>
+            </tr>`,
+            )
+            .join("")}
+        </tbody>
+      </table>
+    </div>`;
+      }
+
+      function renderUsersPage() {
+        return `
+    <div class="admin-page-title">👥 User Management</div>
+    <div class="admin-page-sub">Manage all registered users</div>
+
+    <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+      <input class="input-field" style="flex:1;max-width:320px" placeholder="🔍 Search users..." oninput="filterUsers(this.value)" id="user-search">
+      <select class="input-field" style="width:auto" onchange="filterUserRole(this.value)">
+        <option value="">All roles</option>
+        <option value="admin">Admin</option>
+        <option value="mod">Moderator</option>
+        <option value="user">User</option>
+      </select>
+      <select class="input-field" style="width:auto" onchange="filterUserStatus(this.value)">
+        <option value="">All statuses</option>
+        <option value="active">Active</option>
+        <option value="banned">Banned</option>
+      </select>
+    </div>
+
+    <div class="admin-table-wrap">
+      <div class="admin-table-header">
+        <div class="admin-table-title">All Users (${ADMIN_USERS.length})</div>
+        <span class="sim-badge">DEMO DATA</span>
+      </div>
+      <table class="admin-table" id="users-table">
+        <thead><tr>
+          <th>User</th><th>Role</th><th>Posts</th><th>Followers</th><th>Status</th><th>Joined</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="users-tbody">
+          ${ADMIN_USERS.map((u) => renderUserRow(u)).join("")}
+        </tbody>
+      </table>
+    </div>`;
+      }
+
+      function renderUserRow(u) {
+        return `
+    <tr id="user-row-${u.id}">
+      <td><div class="admin-user-cell">
+        <div style="width:34px;height:34px;border-radius:50%;background:${avatarBg(u.name)};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:0.85rem;flex-shrink:0">${u.name[0]}</div>
+        <div>
+          <div class="admin-user-name">${u.name} ${u.verified ? '<span style="color:var(--accent)">✓</span>' : ""}</div>
+          <div class="admin-user-handle">@${u.handle}</div>
+        </div>
+      </div></td>
+      <td><span class="badge ${
+        u.role === "admin" ? "badge-red"
+        : u.role === "mod" ? "badge-purple"
+        : "badge-blue"
+      }">${u.role}</span></td>
+      <td>${u.posts.toLocaleString()}</td>
+      <td>${u.followers}</td>
+      <td><span class="badge ${u.status === "active" ? "badge-green" : "badge-red"}">${u.status}</span></td>
+      <td style="color:var(--text-muted);font-size:0.82rem">${u.joined}</td>
+      <td>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="admin-action-btn view" onclick="viewUser(${u.id})">👁 View</button>
+          ${
+            u.status === "active" ?
+              `<button class="admin-action-btn ban" onclick="banUser(${u.id})">🔒 Ban</button>`
+            : `<button class="admin-action-btn unban" onclick="unbanUser(${u.id})">✓ Unban</button>`
+          }
+          ${u.role !== "admin" ? `<button class="admin-action-btn" style="color:var(--purple);border:1px solid rgba(168,85,247,0.3)" onclick="App.toast('Role changed (demo)','success')">👑 Role</button>` : ""}
+        </div>
+      </td>
+    </tr>`;
+      }
+
+      function renderReportsPage() {
+        const statusColor = {
+          pending: "badge-yellow",
+          reviewed: "badge-blue",
+          actioned: "badge-red",
+          dismissed: "badge-green",
+        };
+        return `
+    <div class="admin-page-title">🚩 Content Reports</div>
+    <div class="admin-page-sub">Review and action reported content</div>
+
+    <div class="admin-stats-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:24px">
+      ${[
+        { label: "Pending", val: "2", color: "yellow", icon: "⏳" },
+        { label: "Reviewed", val: "1", color: "blue", icon: "👁" },
+        { label: "Actioned", val: "1", color: "red", icon: "🔒" },
+        { label: "Dismissed", val: "1", color: "green", icon: "✓" },
+      ]
+        .map(
+          (s) => `
+        <div class="admin-stat-card ${s.color}" style="padding:16px">
+          <div style="font-size:1.2rem">${s.icon}</div>
+          <div class="stat-card-value" style="font-size:1.4rem">${s.val}</div>
+          <div class="stat-card-label">${s.label}</div>
+        </div>`,
+        )
+        .join("")}
+    </div>
+
+    <div class="admin-table-wrap">
+      <div class="admin-table-header"><div class="admin-table-title">All Reports</div></div>
+      <table class="admin-table">
+        <thead><tr><th>#</th><th>Reporter</th><th>Target</th><th>Reason</th><th>Status</th><th>Time</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${REPORTS.map(
+            (r) => `
+            <tr>
+              <td style="color:var(--text-muted)">#${r.id}</td>
+              <td>@${r.reporter}</td>
+              <td style="color:var(--text-muted);font-size:0.84rem">${r.post}</td>
+              <td>${r.reason}</td>
+              <td><span class="badge ${statusColor[r.status]}">${r.status}</span></td>
+              <td style="color:var(--text-muted);font-size:0.8rem">${r.time}</td>
+              <td>
+                <div style="display:flex;gap:6px">
+                  <button class="admin-action-btn view" onclick="App.toast('Viewing report (demo)','info')">Review</button>
+                  ${r.status === "pending" ? `<button class="admin-action-btn ban" onclick="App.toast('Report actioned (demo)','success')">Action</button>` : ""}
+                </div>
+              </td>
+            </tr>`,
+          ).join("")}
+        </tbody>
+      </table>
+    </div>`;
+      }
+
+      function renderSimulatorPage() {
+        return `
+    <div class="admin-page-title">⚡ Engagement Simulator</div>
+    <div class="admin-page-sub">Control the demo engagement generation system</div>
+
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:var(--radius-lg);padding:20px;margin-bottom:24px">
+      <div style="font-weight:800;color:var(--yellow);font-size:1rem;margin-bottom:6px">⚠️ DEMO SYSTEM NOTICE</div>
+      <div style="font-size:0.85rem;color:var(--text-muted);line-height:1.6">
+        All engagement data generated by this simulator is <strong>100% fictional</strong>. No real users, likes, followers, or interactions are involved.
+        This system exists purely for educational and demonstration purposes.
+      </div>
+    </div>
+
+    <div class="sim-controls">
+      <div class="sim-title">⚡ Simulator Controls</div>
+      <div class="sim-subtitle">Adjust the speed and intensity of simulated engagement</div>
+
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+        <div id="sim-status" style="display:flex;align-items:center;gap:8px;font-weight:700">
+          <div style="width:10px;height:10px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite"></div>
+          Simulator Running
+        </div>
+        <button class="sim-run-btn" onclick="toggleSimulator(this)">⏸ Pause</button>
+        <button class="sim-run-btn" style="background:var(--accent);color:#fff" onclick="runBurst()">💥 Viral Burst</button>
+      </div>
+
+      <div class="sim-grid">
+        ${[
+          {
+            id: "speed",
+            label: "Speed (ms)",
+            min: 1000,
+            max: 10000,
+            val: 3500,
+            step: 500,
+          },
+          {
+            id: "likes",
+            label: "Max Likes/tick",
+            min: 1,
+            max: 200,
+            val: 50,
+            step: 10,
+          },
+          {
+            id: "views",
+            label: "Max Views/tick",
+            min: 10,
+            max: 1000,
+            val: 200,
+            step: 50,
+          },
+          {
+            id: "reposts",
+            label: "Max Reposts/tick",
+            min: 1,
+            max: 50,
+            val: 10,
+            step: 5,
+          },
+          {
+            id: "comments",
+            label: "Max Comments/tick",
+            min: 1,
+            max: 20,
+            val: 5,
+            step: 1,
+          },
+          {
+            id: "trending",
+            label: "Trending threshold",
+            min: 100,
+            max: 10000,
+            val: 1000,
+            step: 100,
+          },
+        ]
+          .map(
+            (s) => `
+          <div class="sim-slider-group">
+            <div class="sim-slider-label">${s.label}</div>
+            <input type="range" class="sim-slider" id="sim-${s.id}" min="${s.min}" max="${s.max}" value="${s.val}" step="${s.step}"
+              oninput="document.getElementById('val-${s.id}').textContent=this.value">
+            <div class="sim-slider-val">Current: <span id="val-${s.id}">${s.val}</span></div>
+          </div>`,
+          )
+          .join("")}
+      </div>
+    </div>
+
+    <!-- Fake user generator -->
+    <div class="admin-table-wrap">
+      <div class="admin-table-header">
+        <div class="admin-table-title">🤖 Active Bots</div>
+        <button class="btn btn-primary" style="padding:6px 16px;font-size:0.82rem" onclick="addBot()">+ Add Bot</button>
+      </div>
+      <table class="admin-table" id="bots-table">
+        <thead><tr><th>Bot</th><th>Type</th><th>Freq (s)</th><th>Status</th><th>Posts Today</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${[
+            {
+              name: "TechBot Alpha",
+              handle: "techbot_alpha",
+              type: "Tech News",
+              freq: 45,
+              status: "active",
+              posts: 38,
+            },
+            {
+              name: "Trend Watcher",
+              handle: "trendwatcher",
+              type: "Trending",
+              freq: 30,
+              status: "active",
+              posts: 62,
+            },
+            {
+              name: "Meme Lord 9000",
+              handle: "memelord9k",
+              type: "Entertainment",
+              freq: 20,
+              status: "active",
+              posts: 91,
+            },
+            {
+              name: "News Flash",
+              handle: "newsflash_sim",
+              type: "Breaking News",
+              freq: 60,
+              status: "paused",
+              posts: 24,
+            },
+            {
+              name: "Quote Bot",
+              handle: "daily_quotes",
+              type: "Inspiration",
+              freq: 90,
+              status: "active",
+              posts: 16,
+            },
+          ]
+            .map(
+              (b) => `
+            <tr>
+              <td><div class="admin-user-cell">
+                <div style="width:32px;height:32px;border-radius:50%;background:var(--purple);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1rem">🤖</div>
+                <div><div style="font-weight:600">${b.name}</div><div style="font-size:0.78rem;color:var(--text-muted)">@${b.handle}</div></div>
+              </div></td>
+              <td><span class="badge badge-purple">${b.type}</span></td>
+              <td>${b.freq}s</td>
+              <td><span class="badge ${b.status === "active" ? "badge-green" : "badge-yellow"}">${b.status}</span></td>
+              <td>${b.posts}</td>
+              <td>
+                <button class="admin-action-btn ${b.status === "active" ? "ban" : "unban"}" onclick="toggleBot(this,'${b.name}')">
+                  ${b.status === "active" ? "⏸ Pause" : "▶ Resume"}
+                </button>
+              </td>
+            </tr>`,
+            )
+            .join("")}
+        </tbody>
+      </table>
+    </div>`;
+      }
+
+      function renderAnalyticsPage() {
+        return `
+    <div class="admin-page-title">📈 Analytics</div>
+    <div class="admin-page-sub">Platform analytics · <span class="sim-badge">ALL DATA SIMULATED</span></div>
+    <div class="chart-grid">
+      <div class="chart-card">
+        <div class="chart-card-title">Daily Active Users</div>
+        <div class="chart-area"><canvas id="dauChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Posts Per Day</div>
+        <div class="chart-area"><canvas id="postsChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Engagement Rate</div>
+        <div class="chart-area"><canvas id="engRate"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-card-title">Content Types</div>
+        <div class="chart-area"><canvas id="contentChart"></canvas></div>
+      </div>
+    </div>`;
+      }
+
+      function showAdminPage(page, el) {
+        document
+          .querySelectorAll(".admin-nav-item")
+          .forEach((i) => i.classList.remove("active"));
+        el.classList.add("active");
+        const main = document.getElementById("admin-main");
+        const pages = {
+          dashboard: renderDashboardPage,
+          users: renderUsersPage,
+          reports: renderReportsPage,
+          simulator: renderSimulatorPage,
+          analytics: renderAnalyticsPage,
+          posts:
+            () => `<div class="admin-page-title">📝 Post Moderation</div><div class="admin-page-sub">Review and moderate posts</div>
+      <div class="admin-table-wrap"><div class="admin-table-header"><div class="admin-table-title">Recent Posts</div><span class="sim-badge">DEMO</span></div>
+      <table class="admin-table"><thead><tr><th>Author</th><th>Content</th><th>Likes</th><th>Reports</th><th>Actions</th></tr></thead><tbody>
+      ${Array.from({ length: 6 }, (_, i) => {
+        const p = Simulator.generateFakePost();
+        return `<tr><td>@${p.username}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.84rem">${Utils.sanitize(p.content || "")}</td><td>${Utils.formatNum(p.sim_likes)}</td><td>${Math.random() > 0.8 ? "1" : "0"}</td><td><button class="admin-action-btn view" onclick="App.toast('Viewing post (demo)','info')">View</button> <button class="admin-action-btn ban" onclick="App.toast('Post removed (demo)','success')">Remove</button></td></tr>`;
+      }).join("")}
+      </tbody></table></div>`,
+          bots: () => renderSimulatorPage(),
+        };
+        if (pages[page]) {
+          main.innerHTML = pages[page]();
+          if (page === "dashboard" || page === "analytics")
+            setTimeout(initCharts, 100);
+        }
+      }
+
+      function initCharts() {
+        const chartDefaults = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { labels: { color: "#8b8ba7", boxWidth: 12 } } },
+          scales: {
+            x: {
+              grid: { color: "rgba(255,255,255,0.05)" },
+              ticks: { color: "#555570" },
+            },
+            y: {
+              grid: { color: "rgba(255,255,255,0.05)" },
+              ticks: { color: "#555570" },
+            },
+          },
+        };
+        const labels7 = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+        const randArr = (min, max, n = 7) =>
+          Array.from({ length: n }, () => Utils.randomInt(min, max));
+
+        const makeChart = (id, type, data, opts = {}) => {
+          const el = document.getElementById(id);
+          if (!el) return;
+          new Chart(el, { type, data, options: { ...chartDefaults, ...opts } });
+        };
+
+        // User growth
+        makeChart("userGrowthChart", "line", {
+          labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul"],
+          datasets: [
+            {
+              label: "Users",
+              data: [120, 185, 240, 310, 410, 520, 680],
+              borderColor: "#1DA8F2",
+              backgroundColor: "rgba(29,168,242,0.1)",
+              fill: true,
+              tension: 0.4,
+              pointRadius: 3,
+            },
+          ],
+        });
+
+        // Engagement
+        makeChart("engagementChart", "bar", {
+          labels: labels7,
+          datasets: [
+            {
+              label: "Likes",
+              data: randArr(200, 800),
+              backgroundColor: "rgba(244,67,108,0.7)",
+            },
+            {
+              label: "Reposts",
+              data: randArr(50, 200),
+              backgroundColor: "rgba(34,197,94,0.7)",
+            },
+          ],
+        });
+
+        // DAU
+        makeChart("dauChart", "line", {
+          labels: labels7,
+          datasets: [
+            {
+              label: "DAU",
+              data: randArr(3, 8),
+              borderColor: "#a855f7",
+              backgroundColor: "rgba(168,85,247,0.1)",
+              fill: true,
+              tension: 0.4,
+            },
+          ],
+        });
+
+        // Posts per day
+        makeChart("postsChart", "bar", {
+          labels: labels7,
+          datasets: [
+            {
+              label: "Posts",
+              data: randArr(20, 120),
+              backgroundColor: "rgba(29,168,242,0.7)",
+              borderRadius: 6,
+            },
+          ],
+        });
+
+        // Engagement rate
+        makeChart("engRate", "line", {
+          labels: labels7,
+          datasets: [
+            {
+              label: "Eng. Rate %",
+              data: randArr(3, 18),
+              borderColor: "#22c55e",
+              backgroundColor: "rgba(34,197,94,0.1)",
+              fill: true,
+              tension: 0.4,
+            },
+          ],
+        });
+
+        // Content types
+        makeChart(
+          "contentChart",
+          "doughnut",
+          {
+            labels: ["Text", "Image", "Video", "GIF"],
+            datasets: [
+              {
+                data: [55, 28, 12, 5],
+                backgroundColor: ["#1DA8F2", "#a855f7", "#f4436c", "#f59e0b"],
+                borderWidth: 0,
+              },
+            ],
+          },
+          { scales: {} },
+        );
+      }
+
+      let simRunning = true;
+      function toggleSimulator(btn) {
+        simRunning = !simRunning;
+        btn.textContent = simRunning ? "⏸ Pause" : "▶ Resume";
+        document.getElementById("sim-status").innerHTML =
+          simRunning ?
+            '<div style="width:10px;height:10px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite"></div> Simulator Running'
+          : '<div style="width:10px;height:10px;background:var(--text-muted);border-radius:50%"></div> Simulator Paused';
+        App.toast(
+          simRunning ? "Simulator resumed" : "Simulator paused",
+          "info",
+        );
+      }
+
+      function runBurst() {
+        App.toast(
+          "💥 Viral burst triggered! All posts getting a wave of engagement (demo)",
+          "warning",
+          4000,
+        );
+      }
+
+      function addBot() {
+        App.toast("New demo bot added (demo only)", "success");
+      }
+
+      function toggleBot(btn, name) {
+        const isPaused = btn.textContent.includes("Resume");
+        btn.textContent = isPaused ? "⏸ Pause" : "▶ Resume";
+        btn.className = `admin-action-btn ${isPaused ? "ban" : "unban"}`;
+        App.toast(`${name} ${isPaused ? "resumed" : "paused"} (demo)`, "info");
+      }
+
+      function banUser(id) {
+        const u = ADMIN_USERS.find((x) => x.id === id);
+        if (!u || u.role === "admin") {
+          App.toast("Can't ban admin", "error");
+          return;
+        }
+        if (!confirm(`Ban @${u.handle}? (demo only)`)) return;
+        u.status = "banned";
+        document.getElementById(`user-row-${id}`).outerHTML = renderUserRow(u);
+        App.toast(`@${u.handle} banned (demo)`, "warning");
+      }
+
+      function unbanUser(id) {
+        const u = ADMIN_USERS.find((x) => x.id === id);
+        if (!u) return;
+        u.status = "active";
+        document.getElementById(`user-row-${id}`).outerHTML = renderUserRow(u);
+        App.toast(`@${u.handle} unbanned (demo)`, "success");
+      }
+
+      function viewUser(id) {
+        const u = ADMIN_USERS.find((x) => x.id === id);
+        if (!u) return;
+        const modal = document.createElement("div");
+        modal.className = "modal-overlay";
+        modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">👤 User Profile</div>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+          <div style="width:60px;height:60px;border-radius:50%;background:${avatarBg(u.name)};display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.5rem;font-weight:700">${u.name[0]}</div>
+          <div>
+            <div style="font-weight:800;font-size:1.1rem">${u.name} ${u.verified ? '<span style="color:var(--accent)">✓</span>' : ""}</div>
+            <div style="color:var(--text-muted)">@${u.handle}</div>
+          </div>
+        </div>
+        ${[
+          ["Email", u.email],
+          ["Role", u.role],
+          ["Status", u.status],
+          ["Posts", u.posts],
+          ["Followers", u.followers + " (sim)"],
+          ["Joined", u.joined],
+        ]
+          .map(
+            ([k, v]) => `
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="color:var(--text-muted);font-size:0.85rem">${k}</span>
+            <span style="font-weight:600;font-size:0.85rem">${v}</span>
+          </div>`,
+          )
+          .join("")}
+        <div style="display:flex;gap:10px;margin-top:20px">
+          <button class="btn btn-outline" onclick="window.open('profile.html?u=${u.handle}','_blank')">View Profile</button>
+          ${
+            u.status === "active" && u.role !== "admin" ?
+              `<button class="btn btn-danger" onclick="banUser(${u.id});this.closest('.modal-overlay').remove()">🔒 Ban User</button>`
+            : u.status === "banned" ?
+              `<button class="btn" style="background:var(--green);color:#fff" onclick="unbanUser(${u.id});this.closest('.modal-overlay').remove()">✓ Unban</button>`
+            : ""
+          }
+        </div>
+      </div>
+    </div>`;
+        modal.onclick = (e) => {
+          if (e.target === modal) modal.remove();
+        };
+        document.body.appendChild(modal);
+      }
+
+      function filterUsers(q) {
+        ADMIN_USERS.forEach((u) => {
+          const row = document.getElementById(`user-row-${u.id}`);
+          if (row)
+            row.style.display =
+              (
+                u.name.toLowerCase().includes(q.toLowerCase()) ||
+                u.handle.includes(q.toLowerCase())
+              ) ?
+                ""
+              : "none";
+        });
+      }
+      function filterUserRole(role) {
+        ADMIN_USERS.forEach((u) => {
+          const row = document.getElementById(`user-row-${u.id}`);
+          if (row) row.style.display = !role || u.role === role ? "" : "none";
+        });
+      }
+      function filterUserStatus(status) {
+        ADMIN_USERS.forEach((u) => {
+          const row = document.getElementById(`user-row-${u.id}`);
+          if (row)
+            row.style.display = !status || u.status === status ? "" : "none";
+        });
+      }
+
+      function avatarBg(name) {
+        const colors = [
+          "#1DA8F2",
+          "#f4436c",
+          "#22c55e",
+          "#a855f7",
+          "#f59e0b",
+          "#06b6d4",
+        ];
+        return colors[(name?.charCodeAt(0) || 0) % colors.length];
+      }
+    </script>
+  </body>
+</html>

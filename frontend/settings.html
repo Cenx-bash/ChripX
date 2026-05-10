@@ -1,0 +1,414 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Settings — ChirpX</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body>
+    <div id="app" class="app-layout"></div>
+    <div id="toast-container"></div>
+    <script src="Js/app.js"></script>
+    <script src="Js/simulator.js"></script>
+    <script>
+      "use strict";
+      document.addEventListener("DOMContentLoaded", () => {
+        App.init();
+
+        const u = App.user || {
+          display_name: "Demo User",
+          username: "demo_user",
+          email: "demo@chirpx.demo",
+          bio: "",
+          location: "",
+          website: "",
+        };
+
+        document.getElementById("app").innerHTML = `
+    ${renderSidebar("settings")}
+    <main class="main-content">
+      <div style="padding:20px 20px 0;border-bottom:1px solid var(--border)">
+        <div style="font-family:var(--font-display);font-size:1.15rem;font-weight:800;padding-bottom:18px">⚙ Settings</div>
+      </div>
+
+      <div class="settings-layout">
+        <!-- Settings nav -->
+        <div class="settings-nav">
+          ${[
+            { id: "profile", icon: "👤", label: "Profile" },
+            { id: "account", icon: "🔒", label: "Account" },
+            { id: "appearance", icon: "🎨", label: "Appearance" },
+            { id: "notifs", icon: "🔔", label: "Notifications" },
+            { id: "privacy", icon: "🛡", label: "Privacy" },
+            { id: "data", icon: "📊", label: "Your Data" },
+            { id: "danger", icon: "⚠", label: "Danger Zone" },
+          ]
+            .map(
+              (item, i) => `
+            <div class="settings-nav-item ${i === 0 ? "active" : ""}" onclick="showSection('${item.id}',this)">
+              <span>${item.icon}</span> ${item.label}
+            </div>`,
+            )
+            .join("")}
+        </div>
+
+        <!-- Settings content -->
+        <div class="settings-content" id="settings-content">
+
+          <!-- Profile section -->
+          <div id="section-profile" class="settings-section">
+            <div class="settings-section-title">Edit Profile</div>
+            <div class="settings-section-desc">Update your public profile information</div>
+
+            <!-- Avatar upload -->
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+              <div style="position:relative">
+                <div id="avatar-preview" style="width:80px;height:80px;border-radius:50%;background:${avatarGrad(u.display_name)};display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:#fff;border:3px solid var(--border)">
+                  ${(u.display_name?.[0] || "U").toUpperCase()}
+                </div>
+                <label for="avatar-input" style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:var(--accent);border-radius:50%;border:2px solid var(--bg-base);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.7rem">📷</label>
+                <input type="file" id="avatar-input" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+              </div>
+              <div>
+                <div style="font-weight:600;margin-bottom:4px">Profile Photo</div>
+                <div style="font-size:0.82rem;color:var(--text-muted)">JPG, PNG or GIF. Max 5MB.</div>
+              </div>
+            </div>
+
+            <!-- Banner -->
+            <div style="margin-bottom:24px">
+              <div style="font-weight:600;font-size:0.85rem;margin-bottom:8px;color:var(--text-secondary)">Banner Image</div>
+              <div id="banner-preview" style="width:100%;height:100px;border-radius:var(--radius-md);background:linear-gradient(135deg,#1a1a2e,#0f3460);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden" onclick="document.getElementById('banner-input').click()">
+                <span style="color:var(--text-muted);font-size:0.85rem">📷 Click to upload banner</span>
+              </div>
+              <input type="file" id="banner-input" accept="image/*" style="display:none" onchange="previewBanner(this)">
+            </div>
+
+            <div class="input-group">
+              <label class="input-label">Display Name</label>
+              <input type="text" class="input-field" id="edit-name" value="${Utils.sanitize(u.display_name)}" maxlength="100">
+            </div>
+            <div class="input-group">
+              <label class="input-label">Bio</label>
+              <textarea class="input-field" id="edit-bio" rows="3" maxlength="160" placeholder="Tell the world about yourself">${Utils.sanitize(u.bio || "")}</textarea>
+              <div style="font-size:0.75rem;color:var(--text-muted);text-align:right" id="bio-counter">${(u.bio || "").length}/160</div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+              <div class="input-group">
+                <label class="input-label">Location</label>
+                <input type="text" class="input-field" id="edit-location" value="${Utils.sanitize(u.location || "")}" placeholder="City, Country">
+              </div>
+              <div class="input-group">
+                <label class="input-label">Website</label>
+                <input type="url" class="input-field" id="edit-website" value="${Utils.sanitize(u.website || "")}" placeholder="https://...">
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="saveProfile()">Save Changes</button>
+          </div>
+
+          <!-- Account section (hidden) -->
+          <div id="section-account" class="settings-section" style="display:none">
+            <div class="settings-section-title">Account Settings</div>
+            <div class="settings-section-desc">Manage your username, email and password</div>
+
+            <div class="input-group">
+              <label class="input-label">Username</label>
+              <input type="text" class="input-field" id="new-username" value="${Utils.sanitize(u.username)}" placeholder="yourhandle">
+            </div>
+            <div class="input-group">
+              <label class="input-label">Email</label>
+              <input type="email" class="input-field" id="new-email" value="${Utils.sanitize(u.email)}" placeholder="you@example.com">
+            </div>
+            <button class="btn btn-primary" onclick="saveAccount()" style="margin-bottom:28px">Update Account</button>
+
+            <div class="settings-section-title" style="font-size:0.95rem">Change Password</div>
+            <div style="height:1px;background:var(--border);margin:12px 0 18px"></div>
+            <div class="input-group">
+              <label class="input-label">Current Password</label>
+              <input type="password" class="input-field" id="cur-pass" placeholder="Current password">
+            </div>
+            <div class="input-group">
+              <label class="input-label">New Password</label>
+              <input type="password" class="input-field" id="new-pass" placeholder="New password (min 8 chars)">
+            </div>
+            <div class="input-group">
+              <label class="input-label">Confirm New Password</label>
+              <input type="password" class="input-field" id="conf-pass" placeholder="Repeat new password">
+            </div>
+            <button class="btn btn-primary" onclick="changePassword()">Change Password</button>
+          </div>
+
+          <!-- Appearance (hidden) -->
+          <div id="section-appearance" class="settings-section" style="display:none">
+            <div class="settings-section-title">Appearance</div>
+            <div class="settings-section-desc">Customize the look and feel of ChirpX</div>
+
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Theme</div>
+                <div class="settings-row-desc">Choose dark or light mode</div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn ${App.theme === "dark" ? "btn-primary" : "btn-outline"}" id="dark-btn" onclick="setTheme('dark')">🌙 Dark</button>
+                <button class="btn ${App.theme === "light" ? "btn-primary" : "btn-outline"}" id="light-btn" onclick="setTheme('light')">☀️ Light</button>
+              </div>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Accent Color</div>
+                <div class="settings-row-desc">Your personalized highlight color</div>
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                ${[
+                  "#1DA8F2",
+                  "#f4436c",
+                  "#22c55e",
+                  "#a855f7",
+                  "#f59e0b",
+                  "#06b6d4",
+                  "#ff6b35",
+                  "#e91e63",
+                ]
+                  .map(
+                    (c) => `
+                  <div style="width:28px;height:28px;background:${c};border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s"
+                    onclick="setAccent('${c}',this)" title="${c}"
+                    class="accent-dot ${u.accent_color === c ? "active" : ""}"></div>`,
+                  )
+                  .join("")}
+              </div>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <div class="settings-row-label">Font Size</div>
+                <div class="settings-row-desc">Adjust text size</div>
+              </div>
+              <select class="input-field" style="width:auto;padding:8px 12px" onchange="setFontSize(this.value)">
+                <option value="14">Small</option>
+                <option value="15" selected>Default</option>
+                <option value="16">Large</option>
+                <option value="18">Extra Large</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Notifications (hidden) -->
+          <div id="section-notifs" class="settings-section" style="display:none">
+            <div class="settings-section-title">Notifications</div>
+            <div class="settings-section-desc">Control what you get notified about</div>
+            ${[
+              { label: "Likes", desc: "When someone likes your chirps" },
+              { label: "Replies", desc: "When someone replies to your chirps" },
+              { label: "Reposts", desc: "When someone reposts your chirps" },
+              { label: "New followers", desc: "When someone follows you" },
+              { label: "Mentions", desc: "When someone mentions you" },
+              { label: "Direct messages", desc: "When you receive a new DM" },
+            ]
+              .map(
+                (s) => `
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <div class="settings-row-label">${s.label}</div>
+                  <div class="settings-row-desc">${s.desc}</div>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" checked>
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+              </div>`,
+              )
+              .join("")}
+          </div>
+
+          <!-- Privacy (hidden) -->
+          <div id="section-privacy" class="settings-section" style="display:none">
+            <div class="settings-section-title">Privacy & Safety</div>
+            <div class="settings-section-desc">Control your privacy settings</div>
+            ${[
+              {
+                label: "Private account",
+                desc: "Only approved followers see your chirps",
+              },
+              {
+                label: "Protect your chirps",
+                desc: "Only followers can see your posts",
+              },
+              { label: "Location sharing", desc: "Add location to your posts" },
+              {
+                label: "Sensitive content",
+                desc: "Show potentially sensitive content",
+              },
+            ]
+              .map(
+                (s, i) => `
+              <div class="settings-row">
+                <div class="settings-row-info">
+                  <div class="settings-row-label">${s.label}</div>
+                  <div class="settings-row-desc">${s.desc}</div>
+                </div>
+                <label class="toggle">
+                  <input type="checkbox" ${i < 1 ? "" : "checked"}>
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+              </div>`,
+              )
+              .join("")}
+          </div>
+
+          <!-- Data (hidden) -->
+          <div id="section-data" class="settings-section" style="display:none">
+            <div class="settings-section-title">Your Data</div>
+            <div class="settings-section-desc">Download or manage your ChirpX data</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <button class="btn btn-outline" onclick="App.toast('Data download (demo — no real data)','info')">📥 Download your data</button>
+              <button class="btn btn-outline" onclick="App.toast('Activity log (demo)','info')">📋 View activity log</button>
+              <button class="btn btn-outline" onclick="App.toast('Connected apps (demo)','info')">🔗 Manage connected apps</button>
+            </div>
+          </div>
+
+          <!-- Danger zone (hidden) -->
+          <div id="section-danger" class="settings-section" style="display:none">
+            <div class="settings-section-title" style="color:var(--red)">⚠ Danger Zone</div>
+            <div class="settings-section-desc">Irreversible account actions</div>
+            <div style="background:rgba(244,67,108,0.06);border:1px solid rgba(244,67,108,0.2);border-radius:var(--radius-md);padding:20px;margin-bottom:16px">
+              <div style="font-weight:700;margin-bottom:6px">Deactivate Account</div>
+              <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px">Your account will be hidden but data preserved. You can reactivate anytime.</div>
+              <button class="btn" style="background:rgba(244,67,108,0.15);color:var(--red);border:1px solid rgba(244,67,108,0.3)" onclick="deactivateAccount()">Deactivate Account</button>
+            </div>
+            <div style="background:rgba(244,67,108,0.06);border:1px solid rgba(244,67,108,0.2);border-radius:var(--radius-md);padding:20px">
+              <div style="font-weight:700;margin-bottom:6px">Delete Account</div>
+              <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:14px">Permanently delete your account and all data. This cannot be undone.</div>
+              <button class="btn btn-danger" onclick="deleteAccount()">🗑 Delete Account Permanently</button>
+            </div>
+            <div style="margin-top:20px;padding:16px;background:var(--bg-card);border-radius:var(--radius-md)">
+              <button class="btn btn-ghost" onclick="App.logout()" style="color:var(--red)">🚪 Sign Out</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>`;
+
+        // Bio counter
+        document
+          .getElementById("edit-bio")
+          ?.addEventListener("input", function () {
+            const c = document.getElementById("bio-counter");
+            if (c) c.textContent = `${this.value.length}/160`;
+          });
+      });
+
+      function showSection(id, el) {
+        document
+          .querySelectorAll(".settings-nav-item")
+          .forEach((i) => i.classList.remove("active"));
+        el.classList.add("active");
+        document
+          .querySelectorAll('[id^="section-"]')
+          .forEach((s) => (s.style.display = "none"));
+        const target = document.getElementById(`section-${id}`);
+        if (target) target.style.display = "block";
+      }
+
+      function saveProfile() {
+        App.toast("Profile updated! (demo)", "success");
+      }
+      function saveAccount() {
+        App.toast("Account updated! (demo)", "success");
+      }
+      function changePassword() {
+        const np = document.getElementById("new-pass")?.value;
+        const cp = document.getElementById("conf-pass")?.value;
+        if (np !== cp) {
+          App.toast("Passwords don't match", "error");
+          return;
+        }
+        if (np?.length < 8) {
+          App.toast("Password too short", "error");
+          return;
+        }
+        App.toast("Password changed! (demo)", "success");
+      }
+      function setTheme(t) {
+        App.applyTheme(t);
+        document
+          .getElementById("dark-btn")
+          ?.classList.toggle("btn-primary", t === "dark");
+        document
+          .getElementById("dark-btn")
+          ?.classList.toggle("btn-outline", t !== "dark");
+        document
+          .getElementById("light-btn")
+          ?.classList.toggle("btn-primary", t === "light");
+        document
+          .getElementById("light-btn")
+          ?.classList.toggle("btn-outline", t !== "light");
+        App.toast(`${t} mode enabled`, "success", 1500);
+      }
+      function setAccent(color) {
+        document.documentElement.style.setProperty("--accent", color);
+        App.toast("Accent color updated (demo)", "success", 1500);
+      }
+      function setFontSize(size) {
+        document.documentElement.style.fontSize = `${size}px`;
+        App.toast("Font size updated", "success", 1500);
+      }
+      function previewAvatar(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const preview = document.getElementById("avatar-preview");
+          if (preview)
+            preview.style.backgroundImage = `url(${e.target.result})`;
+          App.toast("Avatar preview updated (demo)", "info");
+        };
+        reader.readAsDataURL(file);
+      }
+      function previewBanner(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const preview = document.getElementById("banner-preview");
+          if (preview) {
+            preview.style.backgroundImage = `url(${e.target.result})`;
+            preview.style.backgroundSize = "cover";
+            preview.style.backgroundPosition = "center";
+            preview.querySelector("span").style.display = "none";
+          }
+          App.toast("Banner preview updated (demo)", "info");
+        };
+        reader.readAsDataURL(file);
+      }
+      function deactivateAccount() {
+        if (
+          confirm(
+            "Deactivate your account? You can reactivate anytime. (Demo — nothing will actually happen)",
+          )
+        ) {
+          App.toast("Account deactivated (demo)", "info");
+        }
+      }
+      function deleteAccount() {
+        if (
+          confirm(
+            "⚠️ PERMANENTLY DELETE your account? This cannot be undone. (Demo — data is safe)",
+          )
+        ) {
+          App.logout();
+        }
+      }
+      function avatarGrad(name) {
+        const colors = ["#1DA8F2", "#f4436c", "#22c55e", "#a855f7", "#f59e0b"];
+        return `linear-gradient(135deg,${colors[(name?.charCodeAt(0) || 0) % colors.length]},${colors[(name?.charCodeAt(1) || 1) % colors.length]})`;
+      }
+    </script>
+  </body>
+</html>

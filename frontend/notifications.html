@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Notifications — ChirpX</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body>
+    <div id="app" class="app-layout"></div>
+    <div id="toast-container"></div>
+    <script src="js/app.js"></script>
+    <script src="js/simulator.js"></script>
+    <script>
+      "use strict";
+      document.addEventListener("DOMContentLoaded", () => {
+        App.init();
+
+        const notifTypes = [
+          { type: "like", icon: "❤", label: "liked your chirp" },
+          { type: "repost", icon: "🔁", label: "reposted your chirp" },
+          { type: "follow", icon: "👤", label: "started following you" },
+          { type: "comment", icon: "💬", label: "replied to your chirp" },
+          { type: "mention", icon: "@", label: "mentioned you in a chirp" },
+        ];
+
+        const users = Simulator.getRecommendedUsers();
+        const notifs = Array.from({ length: 20 }, (_, i) => {
+          const nt = notifTypes[i % notifTypes.length];
+          const user = users[i % users.length];
+          return {
+            id: i,
+            type: nt.type,
+            icon: nt.icon,
+            user,
+            label: nt.label,
+            time: new Date(
+              Date.now() - i * 3600000 * Math.random() * 8,
+            ).toISOString(),
+            unread: i < 6,
+          };
+        });
+
+        document.getElementById("app").innerHTML = `
+    ${renderSidebar("notifs")}
+    <main class="main-content">
+      <div class="notif-header">
+        <div class="notif-header-title">🔔 Notifications</div>
+        <span class="mark-all-read" onclick="markAllRead()">Mark all as read</span>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs" style="border-bottom:1px solid var(--border)">
+        <div class="tab active" onclick="filterNotifs('all',this)">All</div>
+        <div class="tab" onclick="filterNotifs('mentions',this)">Mentions</div>
+        <div class="tab" onclick="filterNotifs('likes',this)">Likes</div>
+        <div class="tab" onclick="filterNotifs('follows',this)">Follows</div>
+      </div>
+
+      <div id="notif-list">
+        ${notifs.map((n) => renderNotif(n)).join("")}
+      </div>
+    </main>
+
+    <aside class="right-aside">
+      <div class="aside-card" style="padding:18px">
+        <div style="font-family:var(--font-display);font-weight:700;margin-bottom:12px">📊 Activity Summary <span class="sim-badge" style="font-size:0.65rem">DEMO</span></div>
+        ${[
+          {
+            label: "Likes today",
+            val: Utils.formatNum(Utils.randomInt(120, 800)),
+          },
+          {
+            label: "New followers",
+            val: Utils.formatNum(Utils.randomInt(8, 60)),
+          },
+          { label: "Reposts", val: Utils.formatNum(Utils.randomInt(30, 200)) },
+          { label: "Mentions", val: Utils.formatNum(Utils.randomInt(5, 40)) },
+        ]
+          .map(
+            (s) => `
+          <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:0.83rem;color:var(--text-muted)">${s.label}</span>
+            <span style="font-weight:700;font-size:0.88rem;color:var(--accent)">${s.val}</span>
+          </div>`,
+          )
+          .join("")}
+      </div>
+    </aside>`;
+
+        // Simulate live notifications dropping in
+        let count = 0;
+        setInterval(() => {
+          if (count++ > 3) return;
+          const nt = notifTypes[Math.floor(Math.random() * notifTypes.length)];
+          const user = users[Math.floor(Math.random() * users.length)];
+          const n = {
+            id: Date.now(),
+            type: nt.type,
+            icon: nt.icon,
+            user,
+            label: nt.label,
+            time: new Date().toISOString(),
+            unread: true,
+          };
+          const list = document.getElementById("notif-list");
+          if (list) list.insertAdjacentHTML("afterbegin", renderNotif(n));
+          App.toast(`${user.display_name} ${nt.label} (sim)`, "info", 2500);
+        }, 12000);
+      });
+
+      function renderNotif(n) {
+        return `
+    <div class="notif-item ${n.unread ? "unread" : ""}" id="notif-${n.id}" onclick="readNotif(${n.id})">
+      <div class="notif-type-icon ${n.type}">${n.icon}</div>
+      <div class="notif-content">
+        <img class="notif-avatar" src="${Utils.avatarPlaceholder(n.user.display_name)}" alt="">
+        <div class="notif-text">
+          <strong>${Utils.sanitize(n.user.display_name)}</strong> ${n.label}
+        </div>
+        <div class="notif-time">${Utils.timeAgo(n.time)} · <span class="sim-badge" style="font-size:0.62rem">DEMO</span></div>
+      </div>
+      ${n.unread ? '<div class="notif-unread-badge"></div>' : ""}
+    </div>`;
+      }
+
+      function readNotif(id) {
+        const el = document.getElementById(`notif-${id}`);
+        if (el) {
+          el.classList.remove("unread");
+          el.querySelector(".notif-unread-badge")?.remove();
+        }
+      }
+
+      function markAllRead() {
+        document.querySelectorAll(".notif-item").forEach((el) => {
+          el.classList.remove("unread");
+          el.querySelector(".notif-unread-badge")?.remove();
+        });
+        App.toast("All notifications marked as read", "success");
+      }
+
+      function filterNotifs(type, el) {
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        el.classList.add("active");
+        document.querySelectorAll(".notif-item").forEach((n) => {
+          if (type === "all") {
+            n.style.display = "flex";
+            return;
+          }
+          const map = { mentions: "mention", likes: "like", follows: "follow" };
+          n.style.display =
+            n.querySelector(`.notif-type-icon.${map[type]}`) ? "flex" : "none";
+        });
+      }
+    </script>
+  </body>
+</html>

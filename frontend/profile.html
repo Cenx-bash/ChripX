@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile — ChirpX</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body>
+    <div id="app" class="app-layout"></div>
+    <div id="toast-container"></div>
+    <script src="Js/app.js"></script>
+    <script src="Js/simulator.js"></script>
+    <script>
+      "use strict";
+      document.addEventListener("DOMContentLoaded", async () => {
+        App.init();
+        const username =
+          new URLSearchParams(window.location.search).get("u") ||
+          App.user?.username;
+
+        // Demo profile data
+        const profiles = {
+          alex_rivers: {
+            username: "alex_rivers",
+            display_name: "Alex Rivers",
+            bio: "Tech enthusiast | Coffee addict | Building cool stuff 🚀",
+            is_verified: true,
+            simulated_followers: 48293,
+            simulated_following: 512,
+            simulated_posts: 1043,
+            website: "https://alexrivers.dev",
+            location: "San Francisco, CA",
+            joined: "March 2021",
+            accent: "#1DA8F2",
+          },
+          maya_chen: {
+            username: "maya_chen",
+            display_name: "Maya Chen",
+            bio: "Designer & Creative Director | She/Her | Making pixels pretty ✨",
+            is_verified: true,
+            simulated_followers: 31847,
+            simulated_following: 287,
+            simulated_posts: 762,
+            website: "https://mayachen.design",
+            location: "New York, NY",
+            joined: "June 2020",
+            accent: "#a855f7",
+          },
+          sarahcodes: {
+            username: "sarahcodes",
+            display_name: "Sarah Mitchell",
+            bio: "Senior Engineer @BigTechCo | Speaker | Mentor | she/her",
+            is_verified: true,
+            simulated_followers: 89234,
+            simulated_following: 1203,
+            simulated_posts: 4521,
+            location: "Austin, TX",
+            joined: "January 2019",
+            accent: "#22c55e",
+          },
+          dev_marco: {
+            username: "dev_marco",
+            display_name: "Marco Dev",
+            bio: "Full-stack developer | Open source | 🦀 Rust lover",
+            is_verified: false,
+            simulated_followers: 12450,
+            simulated_following: 943,
+            simulated_posts: 2103,
+            location: "Berlin, DE",
+            joined: "August 2022",
+            accent: "#f59e0b",
+          },
+          travel_jess: {
+            username: "travel_jess",
+            display_name: "Jessica Wong",
+            bio: "✈️ Travel blogger | 47 countries | Foodie | Adventure seeker",
+            is_verified: false,
+            simulated_followers: 234891,
+            simulated_following: 2310,
+            simulated_posts: 8920,
+            location: "Everywhere 🌍",
+            joined: "May 2018",
+            accent: "#f4436c",
+          },
+          art_zara: {
+            username: "art_zara",
+            display_name: "Zara Okonkwo",
+            bio: "🎨 Digital artist & illustrator | Commissions open | Lagos/London",
+            is_verified: true,
+            simulated_followers: 156723,
+            simulated_following: 893,
+            simulated_posts: 2894,
+            location: "Lagos / London",
+            joined: "November 2020",
+            accent: "#06b6d4",
+          },
+          admin: {
+            username: "admin",
+            display_name: "ChirpX Admin",
+            bio: "Official ChirpX platform account 🐦",
+            is_verified: true,
+            simulated_followers: 99812,
+            simulated_following: 42,
+            simulated_posts: 287,
+            location: "San Francisco, CA",
+            joined: "January 2020",
+            accent: "#1DA8F2",
+            is_admin: true,
+          },
+        };
+
+        const profile = profiles[username] || App.user || profiles.alex_rivers;
+        const isOwnProfile = App.user?.username === profile.username;
+
+        const posts = Array.from({ length: 10 }, (_, i) => ({
+          ...Simulator.generateFakePost({
+            username: profile.username,
+            display_name: profile.display_name,
+            is_verified: profile.is_verified,
+          }),
+          id: Date.now() + i,
+          created_at: new Date(
+            Date.now() - i * 3600000 * Utils.randomInt(2, 24),
+          ).toISOString(),
+        }));
+
+        const pinnedPost = posts[0];
+
+        document.title = `${profile.display_name} (@${profile.username}) — ChirpX`;
+
+        document.getElementById("app").innerHTML = `
+    ${renderSidebar("profile")}
+    <main class="main-content">
+      <!-- Banner -->
+      <div class="profile-banner-placeholder" style="background:linear-gradient(135deg,#${Math.floor(
+        Math.random() * 16777215,
+      )
+        .toString(16)
+        .padStart(6, "0")}22,#1a1a2e)"></div>
+
+      <!-- Profile info -->
+      <div class="profile-info-section">
+        <div class="profile-avatar-row">
+          <div class="profile-avatar-wrap">
+            <img class="profile-avatar" src="${Utils.avatarPlaceholder(profile.display_name)}" alt="${profile.display_name}">
+            ${isOwnProfile ? "<div class=\"profile-avatar-edit\" onclick=\"App.toast('Avatar upload (demo)','info')\">📷</div>" : ""}
+            <div class="profile-online-dot"></div>
+          </div>
+          <div class="profile-actions">
+            ${
+              isOwnProfile ?
+                `<button class="edit-profile-btn" onclick="window.location.href='settings.html'">Edit Profile</button>`
+              : `<button class="follow-btn" id="follow-btn" onclick="toggleFollow(this)">Follow</button>
+                 <button class="btn btn-outline" style="padding:8px 14px" onclick="window.location.href='messages.html'">✉ Message</button>`
+            }
+            <button class="btn btn-outline" style="padding:8px 14px" onclick="App.toast('More options (demo)','info')">···</button>
+          </div>
+        </div>
+
+        <div class="profile-name-row">
+          <div class="profile-display-name">
+            ${Utils.sanitize(profile.display_name)}
+            ${profile.is_verified ? '<span class="verified-badge" title="Verified">✓</span>' : ""}
+            ${profile.is_admin ? '<span class="badge badge-red" style="font-size:0.7rem">Admin</span>' : ""}
+          </div>
+          <div class="profile-username">@${profile.username}</div>
+        </div>
+
+        <div class="profile-bio">${Utils.sanitize(profile.bio || "")}</div>
+
+        <div class="profile-meta">
+          ${profile.location ? `<div class="profile-meta-item"><span class="icon">📍</span>${Utils.sanitize(profile.location)}</div>` : ""}
+          ${profile.website ? `<div class="profile-meta-item"><span class="icon">🔗</span><a href="${profile.website}" style="color:var(--accent)" target="_blank">${profile.website}</a></div>` : ""}
+          <div class="profile-meta-item"><span class="icon">📅</span>Joined ${profile.joined || "January 2023"}</div>
+        </div>
+
+        <div class="profile-stats">
+          <div class="profile-stat" onclick="showFollowModal('following')">
+            <span class="profile-stat-num">${Utils.formatNum(profile.simulated_following)}</span>
+            <span class="profile-stat-label"> Following</span>
+            <div class="sim-badge" style="font-size:0.6rem;margin-top:2px">SIM</div>
+          </div>
+          <div class="profile-stat" onclick="showFollowModal('followers')">
+            <span class="profile-stat-num">${Utils.formatNum(profile.simulated_followers)}</span>
+            <span class="profile-stat-label"> Followers</span>
+            <div class="sim-badge" style="font-size:0.6rem;margin-top:2px">SIM</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="profile-tabs tabs">
+        <div class="tab active" onclick="switchTab('posts',this)">Posts</div>
+        <div class="tab" onclick="switchTab('replies',this)">Replies</div>
+        <div class="tab" onclick="switchTab('media',this)">Media</div>
+        <div class="tab" onclick="switchTab('likes',this)">Likes</div>
+      </div>
+
+      <!-- Pinned post -->
+      <div class="pinned-indicator">📌 Pinned Chirp</div>
+      ${renderPostCard({ ...pinnedPost, is_pinned: true })}
+
+      <!-- Posts feed -->
+      <div id="profile-feed">
+        ${posts
+          .slice(1)
+          .map((p) => renderPostCard(p))
+          .join("")}
+      </div>
+    </main>
+
+    <aside class="right-aside">
+      <div class="aside-card" style="padding:20px">
+        <div style="font-family:var(--font-display);font-size:1rem;font-weight:700;margin-bottom:14px">📊 Post Stats <span class="sim-badge" style="font-size:0.65rem">DEMO</span></div>
+        ${[
+          {
+            label: "Total Posts",
+            val: Utils.formatNum(profile.simulated_posts),
+          },
+          {
+            label: "Total Likes",
+            val: Utils.formatNum(profile.simulated_followers * 12),
+          },
+          {
+            label: "Total Views",
+            val: Utils.formatNum(profile.simulated_followers * 89),
+          },
+          {
+            label: "Impressions",
+            val: Utils.formatNum(profile.simulated_followers * 204),
+          },
+        ]
+          .map(
+            (s) => `
+          <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:0.85rem;color:var(--text-muted)">${s.label}</span>
+            <span style="font-weight:700;font-size:0.9rem">${s.val}</span>
+          </div>`,
+          )
+          .join("")}
+      </div>
+
+      <div class="aside-card" style="padding:20px">
+        <div style="font-size:0.74rem;color:var(--text-muted);line-height:1.7">
+          <span class="sim-badge">⚡ DEMO MODE</span><br><br>
+          All follower counts and engagement stats shown here are <strong>entirely simulated</strong> demo data.
+        </div>
+      </div>
+    </aside>`;
+
+        // Start simulator on profile posts
+        const ids = posts.map((p) => p.id);
+        setTimeout(() => Simulator.start(ids, null, 5000), 3000);
+      });
+
+      function switchTab(tab, el) {
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        el.classList.add("active");
+        const feed = document.getElementById("profile-feed");
+        if (!feed) return;
+
+        const posts = Array.from({ length: 8 }, (_, i) => ({
+          ...Simulator.generateFakePost(),
+          id: Date.now() + i,
+        }));
+
+        if (tab === "media") {
+          feed.innerHTML = `
+      <div style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:3px">
+        ${Array.from(
+          { length: 9 },
+          (_, i) => `
+          <div style="aspect-ratio:1;background:linear-gradient(135deg,hsl(${i * 40},50%,25%),hsl(${i * 40 + 60},50%,20%));cursor:pointer;border-radius:2px" onclick="App.toast('Media viewer (demo)','info')"></div>`,
+        ).join("")}
+      </div>`;
+        } else {
+          feed.innerHTML = posts.map((p) => renderPostCard(p)).join("");
+        }
+      }
+
+      function toggleFollow(btn) {
+        if (!App.requireAuth()) return;
+        const is = btn.classList.contains("following");
+        btn.classList.toggle("following", !is);
+        btn.textContent = is ? "Follow" : "Following";
+        App.toast(
+          is ? "Unfollowed (demo)" : "Now following (demo) ✓",
+          "success",
+          2000,
+        );
+      }
+
+      function showFollowModal(type) {
+        const users = Simulator.getRecommendedUsers();
+        const modal = document.createElement("div");
+        modal.className = "modal-overlay";
+        modal.innerHTML = `
+    <div class="modal" style="max-width:400px">
+      <div class="modal-header">
+        <div class="modal-title">${type === "followers" ? "Followers" : "Following"} <span class="sim-badge" style="font-size:0.65rem">DEMO</span></div>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+      </div>
+      <div class="modal-body" style="padding:0">
+        ${users
+          .map(
+            (u) => `
+          <div class="follow-item">
+            <img class="follow-avatar" src="${Utils.avatarPlaceholder(u.display_name)}" alt="">
+            <div class="follow-info">
+              <div class="follow-name">${Utils.sanitize(u.display_name)} ${u.is_verified ? '<span class="verified">✓</span>' : ""}</div>
+              <div class="follow-handle">@${u.username}</div>
+            </div>
+            <button class="follow-btn following" onclick="this.classList.toggle('following');this.textContent=this.classList.contains('following')?'Following':'Follow'">Following</button>
+          </div>`,
+          )
+          .join("")}
+      </div>
+    </div>`;
+        modal.onclick = (e) => {
+          if (e.target === modal) modal.remove();
+        };
+        document.body.appendChild(modal);
+      }
+    </script>
+  </body>
+</html>

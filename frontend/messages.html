@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Messages — ChirpX</title>
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/dashboard.css" />
+  </head>
+  <body>
+    <div id="toast-container"></div>
+    <script src="Js/app.js"></script>
+    <script src="Js/simulator.js"></script>
+    <script>
+      "use strict";
+      const CONVOS = [
+        {
+          id: 1,
+          name: "Maya Chen",
+          username: "maya_chen",
+          group: false,
+          online: true,
+          unread: 2,
+          msgs: [
+            {
+              from: "them",
+              text: "Hey! Loved your post about shipping features 🔥",
+              time: "2:14 PM",
+            },
+            {
+              from: "me",
+              text: "Thanks! Took forever but worth it. Working on anything cool?",
+              time: "2:16 PM",
+            },
+            {
+              from: "them",
+              text: "Yes! Redesigning our whole component library. Want to collaborate?",
+              time: "2:18 PM",
+            },
+          ],
+        },
+        {
+          id: 2,
+          name: "Sarah Mitchell",
+          username: "sarahcodes",
+          group: false,
+          online: false,
+          unread: 0,
+          msgs: [
+            {
+              from: "them",
+              text: "Your thread on senior eng skills was 🔥 bookmarked it",
+              time: "Yesterday",
+            },
+            {
+              from: "me",
+              text: "Thank you! It took a while to write but I'm glad it resonated",
+              time: "Yesterday",
+            },
+          ],
+        },
+        {
+          id: 3,
+          name: "ChirpX Builder Squad 🚀",
+          username: null,
+          group: true,
+          online: false,
+          unread: 3,
+          msgs: [
+            {
+              from: "alex_rivers",
+              text: "Hey squad! Anyone want to build something together?",
+              time: "Mon",
+            },
+            {
+              from: "maya_chen",
+              text: "Yes!! What are you thinking?",
+              time: "Mon",
+            },
+            {
+              from: "dev_marco",
+              text: "I'm in. Need a backend dev?",
+              time: "Mon",
+            },
+            {
+              from: "sarahcodes",
+              text: "Count me in! I can help with architecture",
+              time: "Mon",
+            },
+          ],
+        },
+        {
+          id: 4,
+          name: "Alex Rivers",
+          username: "alex_rivers",
+          group: false,
+          online: true,
+          unread: 0,
+          msgs: [
+            {
+              from: "me",
+              text: "That blog post you wrote was incredible",
+              time: "Sun",
+            },
+            {
+              from: "them",
+              text: "Really appreciate that, means a lot!",
+              time: "Sun",
+            },
+          ],
+        },
+        {
+          id: 5,
+          name: "Zara Okonkwo",
+          username: "art_zara",
+          group: false,
+          online: false,
+          unread: 1,
+          msgs: [
+            {
+              from: "them",
+              text: "Commission inquiry — are you still doing collabs?",
+              time: "Sat",
+            },
+          ],
+        },
+      ];
+
+      let activeConvo = null;
+      let typingTimeout;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        App.init();
+        renderMessages();
+      });
+
+      function renderMessages() {
+        document.body.innerHTML = `
+    <div id="toast-container"></div>
+    <div style="display:flex;height:100vh;max-width:1280px;margin:0 auto">
+      <!-- Slim sidebar -->
+      <nav class="sidebar" style="width:70px;align-items:center">
+        <div style="font-size:1.4rem;color:var(--accent);padding:12px;margin-bottom:8px">🐦</div>
+        ${[
+          { href: "dashboard.html", icon: "⌂", tip: "Home" },
+          { href: "explore.html", icon: "🔍", tip: "Explore" },
+          { href: "notifications.html", icon: "🔔", tip: "Notifications" },
+          { href: "messages.html", icon: "✉", tip: "Messages", active: true },
+          { href: "profile.html", icon: "👤", tip: "Profile" },
+          { href: "settings.html", icon: "⚙", tip: "Settings" },
+        ]
+          .map(
+            (i) =>
+              `<a href="${i.href}" class="nav-item ${i.active ? "active" : ""}" style="justify-content:center" title="${i.tip}"><span class="nav-icon">${i.icon}</span></a>`,
+          )
+          .join("")}
+        <div style="margin-top:auto">
+          <div class="user-chip" style="justify-content:center" onclick="window.location.href='settings.html'">
+            <div style="width:36px;height:36px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:0.9rem;color:#fff">
+              ${(App.user?.display_name?.[0] || "U").toUpperCase()}
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Conversations list -->
+      <div class="messages-sidebar" id="convo-list-panel">
+        <div class="messages-sidebar-header">
+          <div class="messages-sidebar-title">✉ Messages</div>
+          <button class="new-convo-btn" onclick="newConvoModal()" title="New message">✏</button>
+        </div>
+        <div class="messages-search">
+          <input type="text" placeholder="Search conversations..." oninput="filterConvos(this.value)">
+        </div>
+        <div class="convo-list" id="convo-list">
+          ${CONVOS.map((c) => renderConvoItem(c)).join("")}
+        </div>
+      </div>
+
+      <!-- Chat area -->
+      <div class="chat-area" id="chat-area">
+        <div class="chat-empty">
+          <div class="chat-empty-icon">✉️</div>
+          <div class="chat-empty-title">Your Messages</div>
+          <div class="chat-empty-text">Send private photos and messages to a friend or group</div>
+          <button class="btn btn-primary" onclick="newConvoModal()">✏ Send Message</button>
+        </div>
+      </div>
+    </div>`;
+      }
+
+      function renderConvoItem(c) {
+        const lastMsg = c.msgs[c.msgs.length - 1];
+        return `
+    <div class="convo-item ${c.unread ? "unread" : ""}" id="convo-item-${c.id}" onclick="openConvo(${c.id})">
+      <div class="convo-avatar-wrap">
+        <div style="width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:700;color:#fff;background:${c.group ? "linear-gradient(135deg,var(--accent),var(--purple))" : avatarBg(c.name)};flex-shrink:0">
+          ${c.group ? "👥" : c.name[0]}
+        </div>
+        ${c.online ? '<div class="convo-online"></div>' : ""}
+        ${c.group ? '<div class="convo-group-icon">👥</div>' : ""}
+      </div>
+      <div class="convo-info">
+        <div class="convo-name">${c.name}</div>
+        <div class="convo-preview">${lastMsg ? lastMsg.text : "No messages yet"}</div>
+      </div>
+      <div class="convo-meta">
+        <div class="convo-time">${lastMsg?.time || ""}</div>
+        ${c.unread ? `<div class="unread-dot"></div>` : ""}
+      </div>
+    </div>`;
+      }
+
+      function avatarBg(name) {
+        const colors = [
+          "#1DA8F2",
+          "#f4436c",
+          "#22c55e",
+          "#a855f7",
+          "#f59e0b",
+          "#06b6d4",
+        ];
+        return colors[(name?.charCodeAt(0) || 0) % colors.length];
+      }
+
+      function openConvo(id) {
+        activeConvo = id;
+        const c = CONVOS.find((x) => x.id === id);
+        if (!c) return;
+
+        // Mark as read
+        c.unread = 0;
+        const item = document.getElementById(`convo-item-${id}`);
+        if (item) {
+          item.classList.remove("unread");
+          item.querySelector(".unread-dot")?.remove();
+        }
+
+        document.getElementById("chat-area").innerHTML = `
+    <div class="chat-header">
+      <button class="btn btn-ghost" style="display:none;padding:6px" id="back-btn" onclick="document.getElementById('convo-list-panel').style.display='flex';document.getElementById('chat-area').querySelector('.chat-header').querySelector('#back-btn').style.display='none'">←</button>
+      <div style="width:40px;height:40px;border-radius:50%;background:${c.group ? "linear-gradient(135deg,var(--accent),var(--purple))" : avatarBg(c.name)};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem;flex-shrink:0">
+        ${c.group ? "👥" : c.name[0]}
+      </div>
+      <div class="chat-header-info">
+        <div class="chat-header-name">${c.name} ${c.group ? '<span class="badge badge-blue" style="font-size:0.68rem">Group</span>' : ""}</div>
+        <div class="chat-header-status ${c.online ? "online" : ""}">${c.online ? "● Online" : "○ Offline"}</div>
+      </div>
+      <button class="btn btn-ghost" style="padding:6px" onclick="App.toast('Call feature (demo)','info')" title="Call">📞</button>
+      <button class="btn btn-ghost" style="padding:6px" onclick="App.toast('Video call (demo)','info')" title="Video">📹</button>
+      <button class="btn btn-ghost" style="padding:6px" onclick="App.toast('More options','info')" title="More">···</button>
+    </div>
+
+    <div class="chat-messages" id="chat-msgs">
+      <div class="date-separator">Today</div>
+      ${c.msgs.map((m) => renderBubble(m, c)).join("")}
+    </div>
+
+    <div id="typing-area" style="height:36px;padding:0 20px"></div>
+
+    <div class="chat-input-area">
+      <button class="chat-tool-btn" onclick="App.toast('File sharing (demo)','info')" title="Attach file">📎</button>
+      <button class="chat-tool-btn" onclick="App.toast('Photo (demo)','info')" title="Photo">🖼</button>
+      <div class="chat-input-wrap">
+        <textarea class="chat-input" id="chat-input" placeholder="Message ${c.name}..."
+          rows="1" onkeydown="handleChatKey(event)" oninput="onChatInput(this)"></textarea>
+        <button class="chat-tool-btn" onclick="insertChatEmoji()" title="Emoji">😊</button>
+        <button class="chat-tool-btn" onclick="App.toast('Voice note (demo)','info')" title="Voice">🎤</button>
+      </div>
+      <button class="chat-send-btn" onclick="sendMessage()" title="Send">➤</button>
+    </div>`;
+
+        // Scroll to bottom
+        setTimeout(() => {
+          const msgs = document.getElementById("chat-msgs");
+          if (msgs) msgs.scrollTop = msgs.scrollHeight;
+        }, 50);
+
+        // Simulate typing and auto-reply
+        if (c.online) simulateTypingReply(c);
+      }
+
+      function renderBubble(m, c) {
+        const isMe = m.from === "me";
+        return `
+    <div class="message-group ${isMe ? "mine" : ""}">
+      ${!isMe ? `<div style="width:32px;height:32px;border-radius:50%;background:${avatarBg(c.name)};display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.85rem;font-weight:700;flex-shrink:0;align-self:flex-end">${c.name[0]}</div>` : ""}
+      <div class="message-bubbles">
+        <div class="message-bubble">${Utils.sanitize(m.text)}</div>
+        <div class="message-meta">${m.time} ${isMe ? "· Delivered" : ""}</div>
+      </div>
+    </div>`;
+      }
+
+      function handleChatKey(e) {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      }
+
+      function onChatInput(el) {
+        el.style.height = "auto";
+        el.style.height = Math.min(el.scrollHeight, 120) + "px";
+      }
+
+      function sendMessage() {
+        const input = document.getElementById("chat-input");
+        const text = input?.value.trim();
+        if (!text) return;
+
+        const msgs = document.getElementById("chat-msgs");
+        const now = new Date().toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+
+        msgs.insertAdjacentHTML(
+          "beforeend",
+          `
+    <div class="message-group mine" style="animation:fadeSlideIn 0.2s ease">
+      <div class="message-bubbles">
+        <div class="message-bubble">${Utils.sanitize(text)}</div>
+        <div class="message-meta">${now} · Sending...</div>
+      </div>
+    </div>`,
+        );
+
+        input.value = "";
+        input.style.height = "auto";
+        msgs.scrollTop = msgs.scrollHeight;
+
+        // Simulate delivery
+        setTimeout(() => {
+          const meta = msgs.querySelector(
+            ".message-group.mine:last-child .message-meta",
+          );
+          if (meta) meta.textContent = `${now} · Delivered`;
+        }, 800);
+
+        // Simulate typing reply
+        const c = CONVOS.find((x) => x.id === activeConvo);
+        if (c?.online) setTimeout(() => simulateTypingReply(c, true), 2000);
+      }
+
+      function simulateTypingReply(c, forced) {
+        if (!forced && Math.random() > 0.4) return;
+        const typingArea = document.getElementById("typing-area");
+        if (!typingArea) return;
+
+        typingArea.innerHTML = `
+    <div class="typing-indicator">
+      <div style="width:28px;height:28px;border-radius:50%;background:${avatarBg(c.name)};display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.75rem;font-weight:700">${c.name[0]}</div>
+      <div class="typing-dots">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+      <span style="font-size:0.78rem;color:var(--text-muted)">${c.name.split(" ")[0]} is typing...</span>
+    </div>`;
+
+        const replies = ["Nigga", "tangina mo WHAHAH"];
+
+        setTimeout(
+          () => {
+            typingArea.innerHTML = "";
+            const msgs = document.getElementById("chat-msgs");
+            const now = new Date().toLocaleTimeString("en-US", {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            msgs?.insertAdjacentHTML(
+              "beforeend",
+              `
+      <div class="message-group" style="animation:fadeSlideIn 0.25s ease">
+        <div style="width:32px;height:32px;border-radius:50%;background:${avatarBg(c.name)};display:flex;align-items:center;justify-content:center;color:#fff;font-size:0.85rem;font-weight:700;flex-shrink:0;align-self:flex-end">${c.name[0]}</div>
+        <div class="message-bubbles">
+          <div class="message-bubble">${Utils.sanitize(Simulator.randomChoice(replies))}</div>
+          <div class="message-meta">${now}</div>
+        </div>
+      </div>`,
+            );
+            msgs && (msgs.scrollTop = msgs.scrollHeight);
+          },
+          2200 + Math.random() * 1500,
+        );
+      }
+
+      function filterConvos(q) {
+        CONVOS.forEach((c) => {
+          const el = document.getElementById(`convo-item-${c.id}`);
+          if (el)
+            el.style.display =
+              c.name.toLowerCase().includes(q.toLowerCase()) ? "flex" : "none";
+        });
+      }
+
+      function newConvoModal() {
+        const users = Simulator.getRecommendedUsers();
+        const modal = document.createElement("div");
+        modal.className = "modal-overlay";
+        modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">✉ New Message</div>
+        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <div class="input-label">To:</div>
+          <input class="input-field" placeholder="Search people..." oninput="filterModalUsers(this.value)">
+        </div>
+        <div id="modal-user-list">
+          ${users
+            .map(
+              (u) => `
+            <div class="follow-item" style="cursor:pointer" onclick="startConvo('${u.username}','${u.display_name}')">
+              <div style="width:40px;height:40px;border-radius:50%;background:${avatarBg(u.display_name)};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700">${u.display_name[0]}</div>
+              <div class="follow-info">
+                <div class="follow-name">${Utils.sanitize(u.display_name)} ${u.is_verified ? '<span class="verified">✓</span>' : ""}</div>
+                <div class="follow-handle">@${u.username}</div>
+              </div>
+            </div>`,
+            )
+            .join("")}
+        </div>
+      </div>
+    </div>`;
+        modal.onclick = (e) => {
+          if (e.target === modal) modal.remove();
+        };
+        document.body.appendChild(modal);
+      }
+
+      function startConvo(username, name) {
+        document.querySelector(".modal-overlay")?.remove();
+        const newId = Date.now();
+        CONVOS.unshift({
+          id: newId,
+          name,
+          username,
+          group: false,
+          online: true,
+          unread: 0,
+          msgs: [],
+        });
+        const list = document.getElementById("convo-list");
+        if (list)
+          list.insertAdjacentHTML("afterbegin", renderConvoItem(CONVOS[0]));
+        openConvo(newId);
+        App.toast(`Started conversation with ${name} (demo)`, "success", 2000);
+      }
+
+      function insertChatEmoji() {
+        const emojis = [
+          "😊",
+          "🔥",
+          "❤️",
+          "👏",
+          "🎉",
+          "😂",
+          "🙌",
+          "💯",
+          "✨",
+          "🚀",
+        ];
+        const input = document.getElementById("chat-input");
+        if (input) input.value += Simulator.randomChoice(emojis);
+        input?.focus();
+      }
+    </script>
+  </body>
+</html>
